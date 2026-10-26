@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "runqora",
+  "homepage": "https://runqora.dev",
+  "items": [
+    {
+      "name": "object-actions",
+      "type": "registry:component",
+      "title": "Object actions",
+      "description": "The actions menu of one object in an S3 or R2 bucket: details, download, copy link, rename or move, and delete.",
+      "registryDependencies": ["button", "dropdown-menu"],
+      "files": [
+        {
+          "path": "registry/storage/object-actions.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/object-actions.tsx"
+        }
+      ],
+      "categories": ["storage"]
+    }
+  ]
+}

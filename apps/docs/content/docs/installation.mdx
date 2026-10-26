@@ -1,0 +1,34 @@
+---
+title: Installation
+description: Add the Runqora registry to a project that uses shadcn/ui.
+---
+
+## Requirements
+
+- A project set up with shadcn/ui, with a `components.json`. If you don't have
+  one, run `npx shadcn@latest init`.
+- A Radix or Base UI style, such as `radix-nova` or `base-vega`. React Aria
+  styles aren't supported yet.
+- An `iconLibrary` in `components.json`: `lucide`, `tabler`, `hugeicons`,
+  `phosphor` or `remixicon`.
+
+## Add the registry
+
+Run this once in your project. It adds the `@runqora` namespace to
+`components.json`:
+
+```npm
+npx shadcn@latest registry add @runqora=https://runqora.dev/r/{style}/{name}.json
+```
+
+The CLI fills in `{style}` from your project, so it receives the Radix or
+Base UI version of each component.
+
+## Add components
+
+```npm
+npx shadcn@latest add @runqora/object-actions
+```
+
+The CLI installs any shadcn/ui components it needs, replaces the icons with
+ones from your icon library, and writes the code into your project.

@@ -1,0 +1,25 @@
+# dependencies
+node_modules
+
+# build output
+.next
+.source
+out
+dist
+*.tsbuildinfo
+next-env.d.ts
+
+# generated registry
+apps/docs/public/r
+
+# env files: keep the documented examples
+.env*
+!.env.example
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# local CLI caches
+.cloudflare

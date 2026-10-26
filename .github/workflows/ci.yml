@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Lint, formatting and types in the Dockerfile's `checks` stage, then the
+  # image built the way a deployment builds it. Nothing is pushed.
+  docker:
+    uses: Amblydia/github-actions/.github/workflows/docker-pr.yml@main
+    with:
+      test-target: checks
+
+  # Installs every registry item into a fresh shadcn project, as a developer
+  # would, for both Radix and Base UI and every icon library shadcn supports.
+  # The projects are created with the latest shadcn CLI.
+  install:
+    name: Install (${{ matrix.style }}, ${{ matrix.icons }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        style: [ radix-nova, base-nova ]
+        icons: [ lucide, tabler, hugeicons, phosphor, remixicon ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Build and start the registry
+        run: |
+          bun run --filter docs build
+          PORT=3000 bun run --filter docs start > registry.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health > /dev/null && exit 0
+            sleep 1
+          done
+          cat registry.log
+          exit 1
+      - name: Install and build
+        run: >-
+          bun scripts/test-install.ts --style ${{ matrix.style }}
+          --icons ${{ matrix.icons }} --registry http://localhost:3000 --build

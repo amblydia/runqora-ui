@@ -1,0 +1,23 @@
+name: Deploy
+
+# Builds and pushes the image to GHCR, then asks Coolify to redeploy
+# runqora.dev. Expects the COOLIFY_WEBHOOK and COOLIFY_TOKEN secrets.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docs:
+    uses: Amblydia/github-actions/.github/workflows/docker-deploy.yml@main
+    with:
+      test-target: checks
+    secrets:
+      COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}

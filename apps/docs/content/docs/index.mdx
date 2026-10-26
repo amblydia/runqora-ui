@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: Components for the screens most SaaS apps need and shadcn/ui doesn't ship.
+---
+
+Runqora UI is a [shadcn registry](https://ui.shadcn.com/docs/registry). You add
+components with the shadcn CLI, and the code is copied into your project for
+you to own and change. Nothing runs on Runqora's side.
+
+## How the components work
+
+- **They look like the rest of your app.** They use shadcn/ui components and
+  your theme's CSS variables, with no styles of their own to override.
+- **Radix or Base UI.** The CLI installs the version that matches your
+  project's style.
+- **Your icon library.** Icons come from the `iconLibrary` in your
+  `components.json`: Lucide, Tabler, Hugeicons, Phosphor or Remix Icon.
+- **Your backend.** Components take data and callbacks. Where a server part
+  can't be avoided, such as signing URLs for a bucket, it's a small file you
+  own, not a hosted API.
+
+## What's available
+
+The first set is a **file browser** for S3-compatible buckets such as Amazon S3
+and Cloudflare R2. Files go straight between the browser and your bucket. It's
+being built now, starting with the [object actions](/docs/storage/object-actions)
+menu.
+
+An audit log viewer and webhook screens come next.
+
+<Cards>
+  <Card title="Installation" href="/docs/installation" />
+  <Card title="Object actions" href="/docs/storage/object-actions" />
+</Cards>
