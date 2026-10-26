@@ -14,12 +14,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Lint, formatting and types in the Dockerfile's `checks` stage, then the
-  # image built the way a deployment builds it. Nothing is pushed.
-  docker:
-    uses: Amblydia/github-actions/.github/workflows/docker-pr.yml@main
-    with:
-      test-target: checks
+  checks:
+    name: Lint and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run check
 
   # Installs every registry item into a fresh shadcn project, as a developer
   # would, for both Radix and Base UI and every icon library shadcn supports.

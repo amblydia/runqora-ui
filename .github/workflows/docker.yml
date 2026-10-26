@@ -1,0 +1,23 @@
+name: Docker
+
+# Lint, formatting and types in the Dockerfile's `checks` stage, then the
+# image built the way a deployment builds it. Nothing is pushed.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    uses: Amblydia/github-actions/.github/workflows/docker-pr.yml@main
+    with:
+      test-target: checks
