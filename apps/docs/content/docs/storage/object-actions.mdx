@@ -1,0 +1,40 @@
+---
+title: Object actions
+description: The actions menu of one file in a bucket.
+---
+
+<ComponentPreview>
+  <ObjectActionsDemo />
+</ComponentPreview>
+
+Each action shows only when you pass its handler. Leave out `onRename` and
+`onDelete` for people who may only read files.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/object-actions
+```
+
+## Usage
+
+```tsx
+import { ObjectActions } from "@/components/storage/object-actions";
+
+<ObjectActions
+  object={{ key: "invoices/2026/october.pdf", name: "october.pdf" }}
+  onDelete={() => setDeleting(object)}
+  onDownload={() => download(object.key)}
+/>;
+```
+
+The menu only reports which action was chosen. Your handlers do the work,
+such as opening a confirmation before a delete.
+
+## Props
+
+<AutoTypeTable path="./registry/storage/object-actions.tsx" name="ObjectActionsProps" />
+
+## Source
+
+<include lang="tsx">../../../registry/storage/object-actions.tsx</include>

@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next"
+  ],
+  "overrides": [
+    {
+      // shadcn/ui components and helpers, copied in by the shadcn CLI and kept
+      // close to upstream so they stay easy to update.
+      "includes": ["apps/*/src/components/ui/**", "apps/*/src/lib/utils.ts"],
+      "linter": {
+        "rules": {
+          "a11y": { "noLabelWithoutControl": "off" },
+          "performance": { "noBarrelFile": "off" }
+        }
+      }
+    },
+    {
+      // Inline handlers are the idiomatic React pattern here, and these
+      // components are not render hot paths.
+      "includes": ["apps/**"],
+      "linter": {
+        "rules": { "performance": { "noJsxPropsBind": "off" } }
+      }
+    }
+  ]
+}

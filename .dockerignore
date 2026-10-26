@@ -1,0 +1,29 @@
+# Dependencies and build output
+**/node_modules
+**/.next
+**/.source
+**/out
+**/dist
+**/*.tsbuildinfo
+apps/docs/public/r
+
+# Version control and CI. `.gitignore` stays: the linter reads it to know what
+# to skip.
+.git
+.github
+
+# Local environment files (never bake secrets into an image)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs, editors and OS files
+**/*.log
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Docker files themselves
+Dockerfile
+.dockerignore
