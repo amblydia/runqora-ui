@@ -1,11 +1,16 @@
 import {
   DownloadIcon,
+  FileIcon,
+  FolderIcon,
+  FolderOpenIcon,
   InfoIcon,
   LinkIcon,
   type LucideIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  RefreshCwIcon,
   Trash2Icon,
+  UploadIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
 
@@ -16,11 +21,16 @@ import type { ComponentProps } from "react";
 // so every library is required. The docs render the Lucide icon.
 const icons = {
   DownloadIcon,
+  FileIcon,
+  FolderIcon,
+  FolderOpenIcon,
   InfoIcon,
   LinkIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  RefreshCwIcon,
   Trash2Icon,
+  UploadIcon,
 } satisfies Record<string, LucideIcon>;
 
 type IconPlaceholderProps = ComponentProps<"svg"> & {

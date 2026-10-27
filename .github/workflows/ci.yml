@@ -26,6 +26,40 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check
 
+  # Runs the tests. The S3 client's tests also run against RustFS, an
+  # S3-compatible server, as MinIO no longer publishes free images.
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      rustfs:
+        image: rustfs/rustfs:1.0.4
+        env:
+          RUSTFS_ACCESS_KEY: runqora-test
+          RUSTFS_SECRET_KEY: runqora-test-secret
+          RUSTFS_VOLUMES: /data
+        ports:
+          - 9000:9000
+    env:
+      S3_TEST_ENDPOINT: http://localhost:9000
+      S3_TEST_ACCESS_KEY_ID: runqora-test
+      S3_TEST_SECRET_ACCESS_KEY: runqora-test-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - name: Wait for RustFS
+        run: |
+          for _ in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:9000/ && exit 0
+            sleep 1
+          done
+          exit 1
+      - run: bun run test
+
   # Installs every registry item into a fresh shadcn project, as a developer
   # would, for both Radix and Base UI and every icon library shadcn supports.
   # The projects are created with the latest shadcn CLI.

@@ -8,7 +8,7 @@ Docs: [runqora.dev](https://runqora.dev)
 
 ```bash
 npx shadcn@latest registry add @runqora=https://runqora.dev/r/{style}/{name}.json
-npx shadcn@latest add @runqora/object-actions
+npx shadcn@latest add @runqora/file-browser @runqora/storage-actions
 ```
 
 ## Principles
@@ -27,11 +27,11 @@ npx shadcn@latest add @runqora/object-actions
 One set at a time. Each ships, gets announced and gets feedback before the
 next starts.
 
-1. **File browser for S3-compatible buckets** (in progress). Browse folders,
-   preview, see details, download, copy links, rename or move, and delete
-   files in the Amazon S3 or Cloudflare R2 bucket you already have. Files go
-   straight between the browser and the bucket through signed URLs, with a
-   small server helper you own.
+1. **File browser for S3-compatible buckets**. Browse folders, preview, see
+   details, upload, download, copy links, rename or move, and delete files in
+   the Amazon S3 or Cloudflare R2 bucket you already have. Files go straight
+   between the browser and the bucket through signed URLs, with server
+   actions and a small S3 client you own.
 2. **Audit log viewer.** A filterable activity table and a detail view for
    one entry.
 3. **Webhooks.** Endpoint manager, delivery log, and a payload and response
@@ -55,7 +55,12 @@ bun install
 bun run dev              # docs site on http://localhost:3000
 bun run registry:build   # writes apps/docs/public/r
 bun run check            # lint, formatting and types
+bun run test             # tests
 ```
+
+The S3 client's tests also run against a real S3-compatible server when
+`S3_TEST_ENDPOINT`, `S3_TEST_ACCESS_KEY_ID` and `S3_TEST_SECRET_ACCESS_KEY` are
+set. CI uses [RustFS](https://rustfs.com).
 
 Registry source is in `apps/docs/registry`, listed in
 `apps/docs/registry.json`. Components are written once, Radix-style, with an

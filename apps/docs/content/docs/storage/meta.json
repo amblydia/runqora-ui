@@ -1,4 +1,11 @@
 {
-  "pages": ["object-actions"],
+  "pages": [
+    "file-browser",
+    "server",
+    "object-actions",
+    "object-details",
+    "upload-button",
+    "s3-client"
+  ],
   "title": "File browser"
 }

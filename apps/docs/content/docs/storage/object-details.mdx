@@ -1,0 +1,42 @@
+---
+title: Object details
+description: A side sheet with a preview and the details of one file in a bucket.
+---
+
+<ComponentPreview>
+  <ObjectDetailsDemo />
+</ComponentPreview>
+
+Shows the path, size, type, last modified date, ETag and metadata of one
+object, read when the sheet opens. Images, video and audio get a preview
+through a signed link.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/object-details
+```
+
+## Usage
+
+```tsx
+import { ObjectDetails } from "@/components/storage/object-details";
+import { getDownloadUrl, getObject } from "@/lib/storage/actions";
+
+<ObjectDetails
+  objectKey="images/office.svg"
+  onOpenChange={setOpen}
+  open={open}
+  source={{ getDownloadUrl, getObject }}
+/>;
+```
+
+Leave out `getDownloadUrl` to show details without previews.
+
+## Props
+
+<AutoTypeTable path="./registry/storage/object-details.tsx" name="ObjectDetailsProps" />
+
+## Source
+
+<include lang="tsx">../../../registry/storage/object-details.tsx</include>

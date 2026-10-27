@@ -1,0 +1,46 @@
+---
+title: Upload button
+description: Upload files straight from the browser to a bucket, with progress.
+---
+
+<ComponentPreview>
+  <UploadButtonDemo />
+</ComponentPreview>
+
+Choose one or more files and they upload into one folder, one after another,
+with progress in the button. Each file is signed by `createUpload` on your
+server, then sent from the browser straight to the bucket.
+
+For drag and drop, resumable uploads or upload queues, use a dedicated
+upload registry such as [UploadCN](https://uploadcn.dev) or
+[Better Upload](https://better-upload.com).
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/upload-button
+```
+
+The bucket needs a CORS rule before browsers can upload to it. See
+[server setup](/docs/storage/server#3-allow-uploads-from-your-site).
+
+## Usage
+
+```tsx
+import { UploadButton } from "@/components/storage/upload-button";
+import { createUpload } from "@/lib/storage/actions";
+
+<UploadButton
+  onComplete={({ uploaded, failed }) => refresh()}
+  prefix="uploads/"
+  source={{ createUpload }}
+/>;
+```
+
+## Props
+
+<AutoTypeTable path="./registry/storage/upload-button.tsx" name="UploadButtonProps" />
+
+## Source
+
+<include lang="tsx">../../../registry/storage/upload-button.tsx</include>

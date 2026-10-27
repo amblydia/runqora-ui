@@ -1,0 +1,99 @@
+---
+title: Server setup
+description: Connect the file browser to an S3 or R2 bucket with Next.js server actions.
+---
+
+`@runqora/storage-actions` adds `lib/storage/actions.ts`, a set of server
+actions that read your bucket and sign uploads and downloads. It uses the
+[S3 client](/docs/storage/s3-client) and your bucket's access key, which stay
+on the server.
+
+```npm
+npx shadcn@latest add @runqora/storage-actions
+```
+
+## 1. Add your authorization check
+
+Every server action is a public endpoint that anyone can call. The actions
+refuse every request until you write `authorize()` in
+`lib/storage/actions.ts`. For example, to allow only admins with
+[Better Auth](https://better-auth.com):
+
+```ts title="lib/storage/actions.ts"
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+
+async function authorize(): Promise<void> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (session?.user.role !== "admin") {
+    throw new StorageActionError("You are not allowed to manage files.");
+  }
+}
+```
+
+## 2. Set the environment variables
+
+```bash title=".env"
+S3_BUCKET=my-app-files
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
+# Cloudflare R2: https://<account ID>.r2.cloudflarestorage.com
+# Amazon S3: leave empty.
+S3_ENDPOINT=
+# Amazon S3: the bucket's region, such as eu-central-1. R2: auto.
+S3_REGION=auto
+```
+
+Use a key that can only reach this bucket:
+
+- **Cloudflare R2:** create an API token with **Object Read & Write**,
+  limited to the bucket. The account ID is on the R2 overview page.
+- **Amazon S3:** create an IAM user or role with `s3:ListBucket` on the bucket
+  and `s3:GetObject`, `s3:PutObject` and `s3:DeleteObject` on its objects.
+
+## 3. Allow uploads from your site
+
+Browsers upload straight to the bucket, so the bucket needs a CORS rule that
+allows your site to send `PUT` requests. Downloads and previews don't need one.
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://your-app.com", "http://localhost:3000"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+- **Cloudflare R2:** the bucket's **Settings**, then **CORS Policy**.
+- **Amazon S3:** the bucket's **Permissions**, then **Cross-origin resource
+  sharing (CORS)**.
+
+Without it, uploads fail with a message that the browser blocked them.
+
+## Settings
+
+The top of `lib/storage/actions.ts` has the settings you may want to change:
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `ROOT` | `""` | Keeps the browser inside one folder, such as `uploads/`. Keys outside it can't be read or changed. |
+| `MAX_UPLOAD_BYTES` | 100 MB | Largest file that can be uploaded. |
+| `LINK_EXPIRY_SECONDS` | 1 hour | How long download links and copied links work. |
+| `UPLOAD_EXPIRY_SECONDS` | 10 minutes | How long a signed upload stays valid. |
+
+## What the actions check
+
+- Each key is a string without control characters, at most 1,024 bytes, and
+  inside `ROOT`.
+- Uploads and moves never replace an existing file.
+- Each upload URL is signed for the file's exact type and size, so a
+  different file can't use it.
+- Errors from the bucket are turned into messages that are safe to show.
+  Anything unexpected is logged on the server and shown as a generic error.
+
+## Source
+
+<include lang="ts">../../../registry/lib/storage/actions.ts</include>

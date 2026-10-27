@@ -1,0 +1,70 @@
+---
+title: S3 client
+description: A small server-side client for Amazon S3, Cloudflare R2 and other S3-compatible storage.
+---
+
+The client behind the [server actions](/docs/storage/server). Use it directly
+when you write your own backend for the file browser. It signs requests with
+[aws4fetch](https://github.com/mhart/aws4fetch) instead of the AWS SDK, so it
+adds a few kilobytes and runs anywhere `fetch` does.
+
+```npm
+npx shadcn@latest add @runqora/s3
+```
+
+## Usage
+
+```ts
+import { createS3Client, r2Endpoint } from "@/lib/storage/s3";
+
+// Cloudflare R2
+const s3 = createS3Client({
+  accessKeyId: process.env.S3_ACCESS_KEY_ID,
+  bucket: "my-app-files",
+  endpoint: r2Endpoint(process.env.CLOUDFLARE_ACCOUNT_ID),
+  region: "auto",
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+});
+
+// Amazon S3: leave out the endpoint and give the bucket's region.
+// createS3Client({ ..., region: "eu-central-1" });
+
+const page = await s3.listObjects({ prefix: "invoices/" });
+const url = await s3.signDownloadUrl("invoices/2026/october.pdf", {
+  downloadAs: "october.pdf",
+  expiresIn: 3600,
+});
+```
+
+Keep the client on the server. It holds the secret access key.
+
+## Methods
+
+| Method | What it does |
+| --- | --- |
+| `listObjects({ prefix, cursor, limit })` | One page of objects and folders under `prefix`. |
+| `headObject(key)` | An object's details without its content, or `null`. |
+| `copyObject(fromKey, toKey)` | Copies inside the bucket. |
+| `moveObject(fromKey, toKey)` | Copies, then deletes the original. |
+| `deleteObject(key)` | Deletes an object. |
+| `signDownloadUrl(key, { expiresIn, downloadAs })` | A temporary link. With `downloadAs`, it saves the file under that name. |
+| `signUploadUrl(key, { contentType, size, expiresIn })` | A temporary `PUT` URL for exactly that file, and the headers to send with it. |
+
+## Errors
+
+Failed calls throw an `S3Error` with a `code` and a message that can be shown
+to people, such as "The access key is not allowed to do this in the bucket."
+
+| Code | When |
+| --- | --- |
+| `invalid_credentials` | The key was rejected, or the region is wrong. |
+| `permission_denied` | The key can't do this in the bucket. |
+| `not_found` | The bucket or object doesn't exist. |
+| `conflict` | The object changed during the call. |
+| `rate_limited` | The provider is limiting requests. |
+| `unavailable` | The provider couldn't be reached or failed. |
+| `unknown` | Anything else. |
+
+## Source
+
+<include lang="ts">../../../registry/lib/storage/s3.ts</include>
