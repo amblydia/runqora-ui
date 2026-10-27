@@ -8,6 +8,9 @@
 //
 //   S3_TEST_ENDPOINT=http://localhost:9000 S3_TEST_ACCESS_KEY_ID=... \
 //     S3_TEST_SECRET_ACCESS_KEY=... bun test
+//
+// Set S3_TEST_BUCKET to use an existing, empty bucket, such as an R2 bucket
+// with a token that can't create buckets. Otherwise the test creates one.
 
 import { describe, expect, test } from "bun:test";
 import { AwsClient } from "aws4fetch";
@@ -231,7 +234,7 @@ const endpoint = process.env.S3_TEST_ENDPOINT;
 describe.skipIf(!endpoint)("against an S3-compatible server", () => {
   const config = {
     accessKeyId: process.env.S3_TEST_ACCESS_KEY_ID ?? "",
-    bucket: `runqora-test-${Date.now()}`,
+    bucket: process.env.S3_TEST_BUCKET ?? `runqora-test-${Date.now()}`,
     endpoint,
     region: process.env.S3_TEST_REGION ?? "us-east-1",
     secretAccessKey: process.env.S3_TEST_SECRET_ACCESS_KEY ?? "",
@@ -251,13 +254,16 @@ describe.skipIf(!endpoint)("against an S3-compatible server", () => {
     });
   }
 
-  test("creates the test bucket", async () => {
-    const aws = new AwsClient({ ...config, service: "s3" });
-    const response = await aws.fetch(`${endpoint}/${config.bucket}`, {
-      method: "PUT",
-    });
-    expect(response.status).toBe(200);
-  });
+  test.skipIf(Boolean(process.env.S3_TEST_BUCKET))(
+    "creates the test bucket",
+    async () => {
+      const aws = new AwsClient({ ...config, service: "s3" });
+      const response = await aws.fetch(`${endpoint}/${config.bucket}`, {
+        method: "PUT",
+      });
+      expect(response.status).toBe(200);
+    }
+  );
 
   test("uploads with a signed URL and reads the details", async () => {
     const response = await upload("docs/a & b.txt", "hello", "text/plain");
