@@ -1,0 +1,22 @@
+<svg
+  height="320"
+  viewBox="0 0 480 320"
+  width="480"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title>Acme logo</title>
+  <rect fill="#f4f4f5" height="320" width="480" />
+  <circle cx="240" cy="148" fill="#18181b" r="64" />
+  <rect fill="#fafafa" height="80" rx="16" width="80" x="200" y="108" />
+  <text
+    fill="#18181b"
+    font-family="system-ui, sans-serif"
+    font-size="28"
+    font-weight="600"
+    text-anchor="middle"
+    x="240"
+    y="268"
+  >
+    Acme
+  </text>
+</svg>

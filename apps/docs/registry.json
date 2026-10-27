@@ -4,6 +4,45 @@
   "homepage": "https://runqora.dev",
   "items": [
     {
+      "name": "file-browser",
+      "type": "registry:component",
+      "title": "File browser",
+      "description": "Browse an S3 or R2 bucket: open folders, filter by name, upload, preview, download, copy links, rename or move, and delete files.",
+      "registryDependencies": [
+        "alert-dialog",
+        "breadcrumb",
+        "button",
+        "dialog",
+        "empty",
+        "field",
+        "input",
+        "skeleton",
+        "table",
+        "@runqora/object-actions",
+        "@runqora/object-details",
+        "@runqora/storage",
+        "@runqora/upload-button"
+      ],
+      "files": [
+        {
+          "path": "registry/storage/file-browser.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/file-browser.tsx"
+        },
+        {
+          "path": "registry/storage/rename-object-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/rename-object-dialog.tsx"
+        },
+        {
+          "path": "registry/storage/delete-object-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/delete-object-dialog.tsx"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
       "name": "object-actions",
       "type": "registry:component",
       "title": "Object actions",
@@ -14,6 +53,88 @@
           "path": "registry/storage/object-actions.tsx",
           "type": "registry:component",
           "target": "@components/storage/object-actions.tsx"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
+      "name": "object-details",
+      "type": "registry:component",
+      "title": "Object details",
+      "description": "A side sheet with a preview and the details of one object in an S3 or R2 bucket.",
+      "registryDependencies": ["sheet", "skeleton", "@runqora/storage"],
+      "files": [
+        {
+          "path": "registry/storage/object-details.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/object-details.tsx"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
+      "name": "upload-button",
+      "type": "registry:component",
+      "title": "Upload button",
+      "description": "Uploads files straight from the browser to an S3 or R2 bucket through signed URLs, with progress.",
+      "registryDependencies": ["button", "@runqora/storage"],
+      "files": [
+        {
+          "path": "registry/storage/upload-button.tsx",
+          "type": "registry:component",
+          "target": "@components/storage/upload-button.tsx"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
+      "name": "storage",
+      "type": "registry:lib",
+      "title": "Storage types",
+      "description": "The types the file browser components share, and the StorageSource interface a backend implements.",
+      "files": [
+        {
+          "path": "registry/lib/storage/types.ts",
+          "type": "registry:lib",
+          "target": "@lib/storage/types.ts"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
+      "name": "s3",
+      "type": "registry:lib",
+      "title": "S3 client",
+      "description": "A small server-side client for Amazon S3, Cloudflare R2 and other S3-compatible storage: list, read, move, delete and signed URLs.",
+      "dependencies": ["aws4fetch"],
+      "registryDependencies": ["@runqora/storage"],
+      "files": [
+        {
+          "path": "registry/lib/storage/s3.ts",
+          "type": "registry:lib",
+          "target": "@lib/storage/s3.ts"
+        }
+      ],
+      "categories": ["storage"]
+    },
+    {
+      "name": "storage-actions",
+      "type": "registry:lib",
+      "title": "Storage server actions",
+      "description": "Next.js server actions that connect the file browser to one bucket, with key checks and a place for your authorization.",
+      "registryDependencies": ["@runqora/s3"],
+      "envVars": {
+        "S3_ACCESS_KEY_ID": "",
+        "S3_BUCKET": "",
+        "S3_ENDPOINT": "",
+        "S3_REGION": "auto",
+        "S3_SECRET_ACCESS_KEY": ""
+      },
+      "files": [
+        {
+          "path": "registry/lib/storage/actions.ts",
+          "type": "registry:lib",
+          "target": "@lib/storage/actions.ts"
         }
       ],
       "categories": ["storage"]

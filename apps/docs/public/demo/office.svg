@@ -1,0 +1,14 @@
+<svg
+  height="320"
+  viewBox="0 0 480 320"
+  width="480"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <title>Office buildings</title>
+  <rect fill="#dbeafe" height="320" width="480" />
+  <rect fill="#93c5fd" height="120" width="480" y="200" />
+  <circle cx="380" cy="80" fill="#fde68a" r="36" />
+  <rect fill="#1e3a8a" height="110" width="120" x="60" y="110" />
+  <rect fill="#1d4ed8" height="150" width="90" x="200" y="70" />
+  <rect fill="#2563eb" height="90" width="100" x="310" y="130" />
+</svg>

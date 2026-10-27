@@ -1,0 +1,140 @@
+---
+title: File browser
+description: Browse, preview, upload, rename, move and delete the files in an S3 or R2 bucket.
+---
+
+<ComponentPreview>
+  <FileBrowserDemo />
+</ComponentPreview>
+
+The preview runs against a bucket kept in your browser. Uploads, renames and
+deletes work, and are forgotten when the page reloads.
+
+The browser works with the bucket you already have, on Amazon S3, Cloudflare
+R2 or another S3-compatible service. Files go straight between the browser
+and the bucket through signed URLs, so they never pass through your server.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/file-browser @runqora/storage-actions
+```
+
+`file-browser` is the interface. `storage-actions` adds Next.js server actions
+that sign requests to your bucket. Set them up as shown in
+[server setup](/docs/storage/server) before you use the browser.
+
+Using another backend? Install only `@runqora/file-browser` and
+[write your own source](#use-another-backend).
+
+## Usage
+
+Pass the server actions to the browser as its `source`:
+
+```tsx title="app/files/page.tsx"
+import { FileBrowser } from "@/components/storage/file-browser";
+import {
+  createUpload,
+  deleteObject,
+  getDownloadUrl,
+  getObject,
+  list,
+  moveObject,
+} from "@/lib/storage/actions";
+
+export default function FilesPage() {
+  return (
+    <FileBrowser
+      rootLabel="Files"
+      source={{
+        createUpload,
+        deleteObject,
+        getDownloadUrl,
+        getObject,
+        list,
+        moveObject,
+      }}
+    />
+  );
+}
+```
+
+Leave out a call and the browser hides what depends on it. Without
+`createUpload`, `moveObject` and `deleteObject`, people can browse and
+download but not change anything.
+
+## Keep the folder in the URL
+
+The browser keeps the open folder in its own state. To make folders
+linkable, control it with `prefix` and `onPrefixChange`:
+
+```tsx
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FileBrowser } from "@/components/storage/file-browser";
+import type { StorageSource } from "@/lib/storage/types";
+
+export function Files({ source }: { source: StorageSource }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const prefix = useSearchParams().get("folder") ?? "";
+
+  return (
+    <FileBrowser
+      onPrefixChange={(next) =>
+        router.push(next ? `${pathname}?folder=${encodeURIComponent(next)}` : pathname)
+      }
+      prefix={prefix}
+      source={source}
+    />
+  );
+}
+```
+
+## Use another backend
+
+`source` is a `StorageSource`: an object of async functions that return a
+`StorageResult`, either `{ ok: true, data }` or `{ ok: false, error }`. The
+error is shown to people as it is. Implement it with your own API routes,
+tRPC, or anything else that can reach the bucket:
+
+```ts
+import type { StorageSource } from "@/lib/storage/types";
+
+export const source: StorageSource = {
+  async list({ prefix, startsWith, cursor }) {
+    const response = await fetch(
+      `/api/files?${new URLSearchParams({ prefix, startsWith: startsWith ?? "", cursor: cursor ?? "" })}`
+    );
+    return response.ok
+      ? { ok: true, data: await response.json() }
+      : { ok: false, error: "The folder couldn't be loaded." };
+  },
+};
+```
+
+## Props
+
+<AutoTypeTable path="./registry/storage/file-browser.tsx" name="FileBrowserProps" />
+
+### StorageSource
+
+<AutoTypeTable path="./registry/lib/storage/types.ts" name="StorageSource" />
+
+## What it includes
+
+- [Object actions](/docs/storage/object-actions), the menu of each file.
+- [Object details](/docs/storage/object-details), with image, video and audio
+  previews.
+- [Upload button](/docs/storage/upload-button), with progress.
+- A rename or move dialog, and a delete confirmation.
+
+## Limits
+
+- Buckets can only search by the start of a key, so the filter matches names
+  that start with what you type, in the open folder.
+- Rename and move copy the file, then delete the original. Large files take
+  as long as a copy inside the bucket takes.
+- Uploads are single requests, so a file can be up to 5 GB. `storage-actions`
+  allows 100 MB by default.

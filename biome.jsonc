@@ -5,18 +5,16 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
+  "linter": {
+    // shadcn/ui components and helpers, copied in by the shadcn CLI and kept
+    // as upstream ships them so they stay easy to update.
+    "includes": [
+      "**",
+      "!apps/*/src/components/ui/**",
+      "!apps/*/src/lib/utils.ts"
+    ]
+  },
   "overrides": [
-    {
-      // shadcn/ui components and helpers, copied in by the shadcn CLI and kept
-      // close to upstream so they stay easy to update.
-      "includes": ["apps/*/src/components/ui/**", "apps/*/src/lib/utils.ts"],
-      "linter": {
-        "rules": {
-          "a11y": { "noLabelWithoutControl": "off" },
-          "performance": { "noBarrelFile": "off" }
-        }
-      }
-    },
     {
       // Inline handlers are the idiomatic React pattern here, and these
       // components are not render hot paths.
