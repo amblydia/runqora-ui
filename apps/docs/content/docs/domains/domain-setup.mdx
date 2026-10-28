@@ -1,0 +1,84 @@
+---
+title: Domain setup
+description: The DNS records that connect a custom domain, with copy buttons and checks until the domain is active.
+---
+
+<ComponentPreview>
+  <DomainSetupDemo />
+</ComponentPreview>
+
+Domain setup shows the DNS records a customer adds to connect one domain.
+Each record has copy buttons for its name and value, says what it's for, and
+whether your backend found it. While the domain is pending, it checks again
+on its own.
+
+The [custom domains list](/docs/domains/custom-domains) uses it for each
+domain. Use it on its own for a single-domain setting, or in an onboarding
+step.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/domain-setup
+```
+
+## Usage
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { DomainSetup } from "@/components/domains/domain-setup";
+import { checkDomain } from "@/lib/domains/actions";
+import type { CustomDomain } from "@/lib/domains/types";
+
+export function ConnectDomain({ initial }: { initial: CustomDomain }) {
+  const [domain, setDomain] = useState(initial);
+  return (
+    <DomainSetup
+      domain={domain}
+      onChange={setDomain}
+      onCheck={(options) => checkDomain(domain.id, options)}
+    />
+  );
+}
+```
+
+Without `onCheck`, it only shows the records. Give it `key={domain.id}` if
+it can switch to another domain, so it starts fresh for each.
+
+## How it checks
+
+Until the domain is active and its certificate issued, it checks on its
+own: after about 10 seconds, then waiting longer each time, up to 5 minutes
+between checks. Waits vary a little, so many domains don't check at once.
+Checks pause while the tab is hidden and stop after an hour.
+
+`onCheck` gets `{ manual: true }` when someone chose **Check now**, and
+`{ manual: false }` for the checks made on their own, so your backend can
+keep slower or costlier refreshes to manual ones.
+
+## Records come from your backend
+
+The records, and what each is for, come from your backend, so the panel
+works with any provider:
+
+- **Routing** records send the domain's traffic to you, such as a CNAME to
+  your target, or an A record for a root domain.
+- **Ownership** records prove the customer owns the domain, such as a TXT
+  record with a token.
+- **Certificate** records let a certificate be issued before traffic moves.
+
+Give each record a `status` of `found` or `pending` when your backend knows
+it, and leave it out when it only knows the domain's status. A `note` shows
+under the record, such as "You can remove it once the domain is active."
+Mark a record that gets in the way, such as an old A record, with
+`action: "remove"`: it's listed separately, as one to remove.
+
+## Props
+
+<AutoTypeTable path="./registry/domains/domain-setup.tsx" name="DomainSetupProps" />
+
+### DnsRecord
+
+<AutoTypeTable path="./registry/lib/domains/types.ts" name="DnsRecord" />

@@ -346,6 +346,66 @@
         }
       ],
       "categories": ["webhooks"]
+    },
+    {
+      "name": "custom-domains",
+      "type": "registry:component",
+      "title": "Custom domains",
+      "description": "Let your customers connect their own domains: add one, follow its DNS setup until it's active, make one primary, and remove them.",
+      "registryDependencies": [
+        "alert-dialog",
+        "badge",
+        "button",
+        "dropdown-menu",
+        "empty",
+        "field",
+        "input",
+        "skeleton",
+        "@runqora/domain-setup",
+        "@runqora/domains"
+      ],
+      "files": [
+        {
+          "path": "registry/domains/custom-domains.tsx",
+          "type": "registry:component",
+          "target": "@components/domains/custom-domains.tsx"
+        },
+        {
+          "path": "registry/domains/remove-domain-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/domains/remove-domain-dialog.tsx"
+        }
+      ],
+      "categories": ["domains"]
+    },
+    {
+      "name": "domain-setup",
+      "type": "registry:component",
+      "title": "Domain setup",
+      "description": "The DNS records that connect a custom domain, each with a copy button and whether it was found, checked again on its own until the domain is active.",
+      "registryDependencies": ["badge", "button", "@runqora/domains"],
+      "files": [
+        {
+          "path": "registry/domains/domain-setup.tsx",
+          "type": "registry:component",
+          "target": "@components/domains/domain-setup.tsx"
+        }
+      ],
+      "categories": ["domains"]
+    },
+    {
+      "name": "domains",
+      "type": "registry:lib",
+      "title": "Custom domain types",
+      "description": "The types the custom domain components share, the DomainSource interface you write for your backend, and a hostname check.",
+      "files": [
+        {
+          "path": "registry/lib/domains/types.ts",
+          "type": "registry:lib",
+          "target": "@lib/domains/types.ts"
+        }
+      ],
+      "categories": ["domains"]
     }
   ]
 }
