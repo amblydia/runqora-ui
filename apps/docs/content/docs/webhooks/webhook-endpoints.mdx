@@ -1,0 +1,130 @@
+---
+title: Webhook endpoints
+description: Let your customers add the URLs your app sends webhooks to, pick their events, and manage signing secrets.
+---
+
+<ComponentPreview>
+  <WebhookEndpointsDemo />
+</ComponentPreview>
+
+The preview runs against made-up endpoints kept in your browser. Nothing is
+sent.
+
+The endpoint manager is the screen where your customers tell your app where
+to send webhooks. They add a URL, choose which events it receives, turn it
+off and on, send a test event, and see or rotate its signing secret.
+
+It only manages endpoints. Sending, signing and retrying webhooks is your
+backend's job, whether that's your own code or a service such as
+[Svix](https://www.svix.com).
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/webhook-endpoints
+```
+
+Then write a `WebhookSource` for your backend, as shown in
+[connect a backend](/docs/webhooks/backend).
+
+## Usage
+
+Pass your source and list your app's events:
+
+```tsx title="app/settings/webhooks/page.tsx"
+import { WebhookEndpoints } from "@/components/webhooks/webhook-endpoints";
+import { webhookSource } from "@/lib/webhooks/source";
+
+const eventTypes = [
+  { value: "invoice.paid", label: "Invoice paid" },
+  { value: "invoice.payment_failed", label: "Invoice payment failed" },
+  { value: "customer.created", label: "Customer created" },
+];
+
+export default function WebhooksPage() {
+  return <WebhookEndpoints eventTypes={eventTypes} source={webhookSource} />;
+}
+```
+
+An endpoint receives every event, including ones you add later, unless its
+owner picks some. Without `eventTypes`, there's nothing to pick and every
+endpoint receives every event.
+
+## Only what your backend supports
+
+Each action shows only when your source has the call behind it:
+
+| Action | Call |
+| --- | --- |
+| Add endpoint | `createEndpoint` |
+| Edit, and the on/off switch | `updateEndpoint` |
+| Delete | `deleteEndpoint` |
+| Send test event | `sendTestEvent`, with `eventTypes` |
+| Signing secret | `revealSecret` or `rotateSecret` |
+
+So a source with only `listEndpoints` gives a read-only list.
+
+## Signing secrets
+
+Secrets are never part of the endpoint list. The manager gets one only when
+someone asks for it:
+
+- **When an endpoint is created**, if `createEndpoint` returns its `secret`,
+  the manager shows it straight away.
+- **Reveal** calls `revealSecret`, so people can see the secret again later.
+  Leave `revealSecret` out to show secrets only once, when they are created or
+  rotated.
+- **Rotate** calls `rotateSecret` after asking first. Return the new secret
+  to show it, or `null` when people can see it with `revealSecret`.
+
+A secret that can't be seen again stays on screen until it's copied or
+**Done** is chosen, so a click outside the dialog doesn't lose it.
+
+## Link to the deliveries
+
+Pass `onViewDeliveries` to add **View deliveries** to each endpoint's menu,
+for example to open the [delivery log](/docs/webhooks/webhook-delivery-log)
+filtered to it. It's a function, so pass it from a client component:
+
+```tsx title="app/settings/webhooks/endpoints.tsx"
+"use client";
+
+import { useRouter } from "next/navigation";
+import { WebhookEndpoints } from "@/components/webhooks/webhook-endpoints";
+import { eventTypes } from "@/lib/webhooks/event-types";
+import { webhookSource } from "@/lib/webhooks/source";
+
+export function Endpoints() {
+  const router = useRouter();
+  return (
+    <WebhookEndpoints
+      eventTypes={eventTypes}
+      onViewDeliveries={(endpoint) =>
+        router.push(`/settings/webhooks/deliveries?endpoint=${endpoint.id}`)
+      }
+      source={webhookSource}
+    />
+  );
+}
+```
+
+## Props
+
+<AutoTypeTable path="./registry/webhooks/webhook-endpoints.tsx" name="WebhookEndpointsProps" />
+
+### WebhookEndpoint
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookEndpoint" />
+
+### WebhookEventType
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookEventType" />
+
+## Limits
+
+- The form accepts `https://` URLs only, and sends them as the browser reads
+  them, with the host name encoded. That check is only there so people get a
+  quick message. Your backend must check the URL again: see the
+  [security checklist](/docs/webhooks/backend#security-checklist).
+- Endpoints are listed all at once, without pages, as an account rarely has
+  more than a few.

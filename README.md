@@ -36,8 +36,11 @@ next starts.
    action, outcome and date, and open an event to see what it changed. Events
    live in your own Postgres database, through any Postgres library or ORM,
    with server actions that scope every query to what the person may see.
-3. **Webhooks.** Endpoint manager, delivery log, and a payload and response
-   viewer with resend.
+3. **Webhooks.** Let your customers add and manage the endpoints your app
+   sends webhooks to, and see each delivery's payload and responses, with
+   resend. You bring the backend that sends them, your own code or a service
+   such as [Svix](https://www.svix.com): the components call a small
+   interface you write for it.
 
 Not planned, because good registries already cover them:
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { AuditEventDetails } from "@/components/audit/audit-event-details";
 import { IconPlaceholder } from "@/components/icon-placeholder";
 import { Badge } from "@/components/ui/badge";
@@ -453,16 +453,19 @@ export function AuditLogViewer({
   const [reloads, setReloads] = useState(0);
   const [panel, setPanel] = useState<Panel | null>(null);
   const [message, setMessage] = useState("");
+  // Counts page requests, so a page that arrives after a newer one is dropped.
+  const request = useRef(0);
   const { list } = source;
   const labels = new Map(actions.map((action) => [action.value, action.label]));
   const getLabel = (action: string) => labels.get(action) ?? action;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `reloads` is a counter that asks for a fresh page.
   useEffect(() => {
-    let current = true;
+    request.current += 1;
+    const id = request.current;
     setLoaded({ status: "loading" });
     list({ filter: JSON.parse(filterKey) as AuditLogFilter }).then((result) => {
-      if (current) {
+      if (id === request.current) {
         setLoaded(
           result.ok
             ? { page: result.data, status: "ready" }
@@ -470,9 +473,6 @@ export function AuditLogViewer({
         );
       }
     });
-    return () => {
-      current = false;
-    };
   }, [filterKey, list, reloads]);
 
   function changeFilter(next: AuditLogFilter) {
@@ -487,9 +487,14 @@ export function AuditLogViewer({
       return;
     }
     const { page } = loaded;
+    const id = request.current;
     setLoadingMore(true);
     const result = await list({ cursor: page.nextCursor, filter });
     setLoadingMore(false);
+    // The filter changed or the log reloaded while this page loaded.
+    if (id !== request.current) {
+      return;
+    }
     if (!result.ok) {
       setMessage(result.error);
       return;

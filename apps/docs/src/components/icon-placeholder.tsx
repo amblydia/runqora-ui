@@ -1,18 +1,24 @@
 import {
+  ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
   FileIcon,
   FolderIcon,
   FolderOpenIcon,
   InfoIcon,
+  KeyRoundIcon,
   LinkIcon,
+  ListIcon,
   type LucideIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  PlusIcon,
   RefreshCwIcon,
   SearchIcon,
+  SendIcon,
   Trash2Icon,
   UploadIcon,
+  WebhookIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
 
@@ -22,19 +28,25 @@ import type { ComponentProps } from "react";
 // An icon left out for one library would break installs in projects using it,
 // so every library is required. The docs render the Lucide icon.
 const icons = {
+  ChevronRightIcon,
   CopyIcon,
   DownloadIcon,
   FileIcon,
   FolderIcon,
   FolderOpenIcon,
   InfoIcon,
+  KeyRoundIcon,
   LinkIcon,
+  ListIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  PlusIcon,
   RefreshCwIcon,
   SearchIcon,
+  SendIcon,
   Trash2Icon,
   UploadIcon,
+  WebhookIcon,
 } satisfies Record<string, LucideIcon>;
 
 type IconPlaceholderProps = ComponentProps<"svg"> & {

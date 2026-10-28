@@ -1,0 +1,180 @@
+---
+title: Connect a backend
+description: Write the WebhookSource the webhook components call, with your own code or a service such as Svix.
+---
+
+The webhook components don't send webhooks and don't keep any data. Every
+call goes through a `WebhookSource`, an object of async functions that you
+write for whatever sends your webhooks: your own code and database, or a
+service such as [Svix](https://www.svix.com).
+
+```npm
+npx shadcn@latest add @runqora/webhooks
+```
+
+That adds `lib/webhooks/types.ts` with `WebhookSource` and the types it
+uses. The components install it too.
+
+## The contract
+
+Each function returns a `WebhookResult`: `{ ok: true, data }` or
+`{ ok: false, error }`. The error is shown to people as it is, so write it
+for them. Errors are values rather than exceptions because Next.js hides the
+message of an error thrown by a server action in production.
+
+| Call | Used by | Needed |
+| --- | --- | --- |
+| `listEndpoints` | Endpoints, and the log's endpoint filter | For the endpoint manager |
+| `createEndpoint` | Add endpoint | No |
+| `updateEndpoint` | Edit, on/off switch | No |
+| `deleteEndpoint` | Delete | No |
+| `revealSecret` | Signing secret | No |
+| `rotateSecret` | Signing secret | No |
+| `sendTestEvent` | Send test event | No |
+| `listDeliveries` | Delivery log | For the delivery log |
+| `getDelivery` | Delivery details | For the details |
+| `resendDelivery` | Resend | No |
+
+Leave a call out and the components hide what depends on it.
+
+Keep the source the same object between renders, such as a module-level
+constant or `useState(() => createSource())`. The components load data when
+the source's functions change, so an object rebuilt on every render of a
+client component would load forever.
+
+## With Next.js server actions
+
+Write the calls as server actions, then pass them to the components as an
+object. Every server action is a public endpoint that anyone can call, so
+each one starts by checking who is asking:
+
+```ts title="lib/webhooks/actions.ts"
+"use server";
+
+import type { WebhookEndpoint, WebhookResult } from "@/lib/webhooks/types";
+
+/** The account the signed-in person may manage webhooks for. */
+async function authorize(): Promise<{ accountId: string }> {
+  // Read the session, check the person's role, and return their account.
+  throw new Error("Write the authorization check first.");
+}
+
+export async function listEndpoints(): Promise<WebhookResult<WebhookEndpoint[]>> {
+  try {
+    const { accountId } = await authorize();
+    return { ok: true, data: await yourBackend.listEndpoints(accountId) };
+  } catch (error) {
+    console.error(error);
+    return { ok: false, error: "The endpoints couldn't be loaded." };
+  }
+}
+```
+
+```ts title="lib/webhooks/source.ts"
+import {
+  createEndpoint,
+  getDelivery,
+  listDeliveries,
+  listEndpoints,
+  resendDelivery,
+} from "@/lib/webhooks/actions";
+import type { WebhookSource } from "@/lib/webhooks/types";
+
+export const webhookSource: WebhookSource = {
+  createEndpoint,
+  getDelivery,
+  listDeliveries,
+  listEndpoints,
+  resendDelivery,
+};
+```
+
+A server component can pass `webhookSource` to the components as it is.
+
+## Security checklist
+
+These are your backend's job. A service such as Svix does the sending part
+for you.
+
+- **Check who is asking in every call**, and only return or change that
+  account's endpoints and deliveries, whatever ids the browser sends. Answer
+  "doesn't exist" for ids outside the account, so their existence doesn't
+  leak.
+- **Keep signing secrets out of `listEndpoints`.** Return them only from
+  `createEndpoint`, `revealSecret` and `rotateSecret`, to people allowed to
+  manage webhooks.
+- **Check every input on the server**: URLs (`https://`, a sensible length,
+  no user name or password), event types against your own list, and ids.
+- **Don't let a URL reach your own network.** Customers choose the URLs your
+  server sends requests to, and see what they answer. Refuse private,
+  loopback and link-local addresses, including cloud metadata addresses such
+  as `169.254.169.254`, and your own servers' public addresses. Check the
+  address when the request connects, not only when the URL is saved, as DNS
+  can change in between. Don't follow redirects. See
+  [Standard Webhooks on SSRF](https://github.com/standard-webhooks/standard-webhooks/blob/main/spec/standard-webhooks.md#server-side-request-forgery-ssrf).
+- **Limit each request**, such as 15 seconds for the whole request, and keep
+  only the start of each response.
+- **Sign webhooks** with a secret per endpoint, for example as
+  [Standard Webhooks](https://www.standardwebhooks.com) do, and store the
+  secrets encrypted.
+- **Limit resends and test events** per account, so they can't be used to
+  flood someone else's server.
+
+## With Svix
+
+In Svix, each of your customers is an application, and the components map
+onto its API one call each. `appId` is the customer's Svix application, from
+`authorize()`.
+
+| Call | Svix SDK |
+| --- | --- |
+| `listEndpoints` | `svix.endpoint.list(appId)`, following its `iterator` until `done`. `enabled` is `!disabled`, and `eventTypes` is `filterTypes ?? []`. |
+| `createEndpoint` | `svix.endpoint.create(appId, { url, description, filterTypes })`, then `svix.endpoint.getSecret(appId, id)` for its `secret`. Leave `filterTypes` out for every event: Svix refuses an empty list. |
+| `updateEndpoint` | `svix.endpoint.patch(appId, id, { url, description, filterTypes, disabled })`, with `filterTypes: null` for every event. |
+| `deleteEndpoint` | `svix.endpoint.delete(appId, id)` |
+| `revealSecret` | `svix.endpoint.getSecret(appId, id)`, returning its `key` |
+| `rotateSecret` | `svix.endpoint.rotateSecret(appId, id)`. The old secret keeps working for 24 hours. Return `null` and let people reveal the new one. |
+| `sendTestEvent` | `svix.endpoint.sendExample(appId, endpointId, { eventType })` |
+| `listDeliveries` | `svix.messageAttempt.listAttemptedMessages(appId, endpointId, { status, eventTypes, iterator })`. Status `0` is succeeded, `1` and `3` pending, `2` failed. The cursor is the `iterator`, and the last page has `done`. |
+| `getDelivery` | `svix.message.get(appId, msgId)` for the payload, and `svix.messageAttempt.listByMsg(appId, msgId, { endpointId, withContent: true })` for the attempts. The status comes from the newest attempt, as a message has no status of its own. |
+| `resendDelivery` | `svix.messageAttempt.resend(appId, msgId, endpointId)` |
+
+Svix lists deliveries one endpoint at a time, so give the delivery log
+`requireEndpoint`: it opens on the first endpoint and always keeps one in its
+filter. A delivery is a message sent to an endpoint, so build its id from
+both, such as `` `${endpointId}:${msgId}` ``.
+
+```tsx
+<WebhookDeliveryLog requireEndpoint source={webhookSource} />
+```
+
+## Without Next.js
+
+The components only call functions, so a source can just as well call your
+API with `fetch`:
+
+```ts
+import type { WebhookSource } from "@/lib/webhooks/types";
+
+export const webhookSource: WebhookSource = {
+  async listDeliveries({ cursor, filter }) {
+    const response = await fetch("/api/webhooks/deliveries", {
+      body: JSON.stringify({ cursor, filter }),
+      method: "POST",
+    });
+    return response.ok
+      ? { ok: true, data: await response.json() }
+      : { ok: false, error: "The deliveries couldn't be loaded." };
+  },
+  async listEndpoints() {
+    const response = await fetch("/api/webhooks/endpoints");
+    return response.ok
+      ? { ok: true, data: await response.json() }
+      : { ok: false, error: "The endpoints couldn't be loaded." };
+  },
+};
+```
+
+## WebhookSource
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookSource" />

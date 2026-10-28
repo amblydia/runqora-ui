@@ -1,0 +1,93 @@
+---
+title: Webhook delivery log
+description: Show the webhooks your app has sent, filter them, and open one to see its payload and responses.
+---
+
+<ComponentPreview>
+  <WebhookDeliveryLogDemo />
+</ComponentPreview>
+
+The preview runs against made-up deliveries kept in your browser.
+
+The delivery log lists the webhooks your app has sent, newest first. Filter
+by endpoint, event and status, and open a delivery to see its payload, what
+the endpoint answered to each attempt, and to resend it.
+
+A delivery is one event sent to one endpoint. It's **succeeded** once the
+endpoint accepted it, **failed** once your backend gave up, and **pending**
+until then. A pending delivery with a planned retry shows as **retrying**.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/webhook-delivery-log
+```
+
+It installs [delivery details](/docs/webhooks/webhook-delivery-details), the
+sheet each delivery opens in, and [Dice UI](https://diceui.com)'s Faceted and
+Relative Time Card components. Then write a `WebhookSource` for your backend,
+as shown in [connect a backend](/docs/webhooks/backend).
+
+## Usage
+
+```tsx title="app/settings/webhooks/deliveries/page.tsx"
+import { WebhookDeliveryLog } from "@/components/webhooks/webhook-delivery-log";
+import { webhookSource } from "@/lib/webhooks/source";
+import { eventTypes } from "@/lib/webhooks/event-types";
+
+export default function DeliveriesPage() {
+  return <WebhookDeliveryLog eventTypes={eventTypes} source={webhookSource} />;
+}
+```
+
+The log needs only `listDeliveries`. The rest of the source adds to it:
+
+- `getDelivery` lets people open a delivery.
+- `resendDelivery` adds **Resend** to the details. After a resend, the
+  row shows the delivery's new status.
+- `listEndpoints` adds the endpoint filter.
+- `eventTypes` adds the event filter and shows events by name.
+
+## Show one endpoint's deliveries
+
+Start the log on one endpoint with `defaultFilter`, or control the filter
+with `filter` and `onFilterChange` to keep it in the URL, as the
+[audit log viewer](/docs/audit/audit-log-viewer#keep-the-filter-in-the-url)
+does:
+
+```tsx
+<WebhookDeliveryLog
+  defaultFilter={{ endpointId }}
+  eventTypes={eventTypes}
+  source={webhookSource}
+/>
+```
+
+## Backends that list per endpoint
+
+Some backends, such as Svix, list deliveries one endpoint at a time. Give
+the log `requireEndpoint`: it opens on the first endpoint from
+`listEndpoints`, offers no "All endpoints", and keeps the endpoint when the
+filters are cleared.
+
+```tsx
+<WebhookDeliveryLog requireEndpoint source={webhookSource} />
+```
+
+## Props
+
+<AutoTypeTable path="./registry/webhooks/webhook-delivery-log.tsx" name="WebhookDeliveryLogProps" />
+
+### WebhookDelivery
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookDelivery" />
+
+### WebhookDeliveryFilter
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookDeliveryFilter" />
+
+## Limits
+
+- Deliveries are always newest first, and load a page at a time with a
+  **Load more** button. The page size is up to your backend.
+- There is no search by payload content or date range.

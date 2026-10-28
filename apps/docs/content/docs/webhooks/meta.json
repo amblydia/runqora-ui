@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "webhook-endpoints",
+    "webhook-delivery-log",
+    "webhook-delivery-details",
+    "backend"
+  ],
+  "title": "Webhooks"
+}
