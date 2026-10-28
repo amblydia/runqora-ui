@@ -138,6 +138,104 @@
         }
       ],
       "categories": ["storage"]
+    },
+    {
+      "name": "audit-log-viewer",
+      "type": "registry:component",
+      "title": "Audit log viewer",
+      "description": "The audit log of your app, newest first: filter by actor, action, outcome and date, and open an event to see its changes and details.",
+      "registryDependencies": [
+        "badge",
+        "button",
+        "empty",
+        "input",
+        "native-select",
+        "skeleton",
+        "table",
+        "@diceui/faceted",
+        "@diceui/relative-time-card",
+        "@runqora/audit-event-details",
+        "@runqora/audit-log"
+      ],
+      "files": [
+        {
+          "path": "registry/audit/audit-log-viewer.tsx",
+          "type": "registry:component",
+          "target": "@components/audit/audit-log-viewer.tsx"
+        }
+      ],
+      "categories": ["audit"]
+    },
+    {
+      "name": "audit-event-details",
+      "type": "registry:component",
+      "title": "Audit event details",
+      "description": "A side sheet with everything recorded about one audit log event: actor, target, changes, request details and the raw event.",
+      "registryDependencies": [
+        "badge",
+        "button",
+        "sheet",
+        "skeleton",
+        "table",
+        "@runqora/audit-log"
+      ],
+      "files": [
+        {
+          "path": "registry/audit/audit-event-details.tsx",
+          "type": "registry:component",
+          "target": "@components/audit/audit-event-details.tsx"
+        }
+      ],
+      "categories": ["audit"]
+    },
+    {
+      "name": "audit-log",
+      "type": "registry:lib",
+      "title": "Audit log types",
+      "description": "The types the audit log components share, the AuditLogSource interface a backend implements, and the AuditStore interface for keeping events.",
+      "files": [
+        {
+          "path": "registry/lib/audit/types.ts",
+          "type": "registry:lib",
+          "target": "@lib/audit/types.ts"
+        }
+      ],
+      "categories": ["audit"]
+    },
+    {
+      "name": "audit-postgres",
+      "type": "registry:lib",
+      "title": "Postgres audit store",
+      "description": "Keeps audit events in a Postgres table, in plain SQL, with any Postgres library or ORM.",
+      "registryDependencies": ["@runqora/audit-log"],
+      "files": [
+        {
+          "path": "registry/lib/audit/postgres.ts",
+          "type": "registry:lib",
+          "target": "@lib/audit/postgres.ts"
+        }
+      ],
+      "categories": ["audit"]
+    },
+    {
+      "name": "audit-actions",
+      "type": "registry:lib",
+      "title": "Audit log server actions",
+      "description": "Next.js server actions that read the audit log, with input checks and a place for your authorization, and a function that records events.",
+      "registryDependencies": ["@runqora/audit-postgres"],
+      "files": [
+        {
+          "path": "registry/lib/audit/server.ts",
+          "type": "registry:lib",
+          "target": "@lib/audit/server.ts"
+        },
+        {
+          "path": "registry/lib/audit/actions.ts",
+          "type": "registry:lib",
+          "target": "@lib/audit/actions.ts"
+        }
+      ],
+      "categories": ["audit"]
     }
   ]
 }

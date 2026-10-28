@@ -1,4 +1,5 @@
 import {
+  CopyIcon,
   DownloadIcon,
   FileIcon,
   FolderIcon,
@@ -9,6 +10,7 @@ import {
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
+  SearchIcon,
   Trash2Icon,
   UploadIcon,
 } from "lucide-react";
@@ -20,6 +22,7 @@ import type { ComponentProps } from "react";
 // An icon left out for one library would break installs in projects using it,
 // so every library is required. The docs render the Lucide icon.
 const icons = {
+  CopyIcon,
   DownloadIcon,
   FileIcon,
   FolderIcon,
@@ -29,6 +32,7 @@ const icons = {
   MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
+  SearchIcon,
   Trash2Icon,
   UploadIcon,
 } satisfies Record<string, LucideIcon>;

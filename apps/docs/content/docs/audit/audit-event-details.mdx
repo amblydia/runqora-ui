@@ -1,0 +1,49 @@
+---
+title: Audit event details
+description: A side sheet with everything recorded about one audit log event.
+---
+
+<ComponentPreview>
+  <AuditEventDetailsDemo />
+</ComponentPreview>
+
+Shows the action, actor, target, time, address and browser of one event, a
+table of the fields it changed with their values before and after, and the
+whole event as JSON with a copy button.
+
+The [audit log viewer](/docs/audit/audit-log-viewer) opens it for each
+event. Use it on its own to open an event from a link, such as one in a
+notification.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/audit-event-details
+```
+
+## Usage
+
+Give it the event if you have it, or its id and a `getEvent` to read it:
+
+```tsx
+import { AuditEventDetails } from "@/components/audit/audit-event-details";
+import { getAuditEvent } from "@/lib/audit/actions";
+
+<AuditEventDetails
+  eventId={eventId}
+  onOpenChange={setOpen}
+  open={open}
+  source={{ getEvent: getAuditEvent }}
+/>;
+```
+
+Pass `onFilter` to show links to the other events by the same actor or about
+the same target.
+
+## Props
+
+<AutoTypeTable path="./registry/audit/audit-event-details.tsx" name="AuditEventDetailsProps" />
+
+## Source
+
+<include lang="tsx">../../../registry/audit/audit-event-details.tsx</include>

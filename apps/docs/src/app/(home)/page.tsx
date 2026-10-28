@@ -8,9 +8,9 @@ export default function HomePage() {
         Components for the screens most SaaS apps need
       </h1>
       <p className="text-muted-foreground text-lg">
-        Runqora UI is a shadcn registry. Start with a file browser for the S3 or
-        R2 bucket you already have. Install with the shadcn CLI and own the
-        code.
+        Runqora UI is a shadcn registry: a file browser for the S3 or R2 bucket
+        you already have, and an audit log viewer for your own database. Install
+        with the shadcn CLI and own the code.
       </p>
       <div className="flex flex-wrap gap-3">
         <Button asChild>

@@ -32,8 +32,10 @@ next starts.
    the Amazon S3 or Cloudflare R2 bucket you already have. Files go straight
    between the browser and the bucket through signed URLs, with server
    actions and a small S3 client you own.
-2. **Audit log viewer.** A filterable activity table and a detail view for
-   one entry.
+2. **Audit log viewer.** See who did what in your app: filter by actor,
+   action, outcome and date, and open an event to see what it changed. Events
+   live in your own Postgres database, through any Postgres library or ORM,
+   with server actions that scope every query to what the person may see.
 3. **Webhooks.** Endpoint manager, delivery log, and a payload and response
    viewer with resend.
 
@@ -60,11 +62,15 @@ bun run test             # tests
 
 The S3 client's tests also run against a real S3-compatible server when
 `S3_TEST_ENDPOINT`, `S3_TEST_ACCESS_KEY_ID` and `S3_TEST_SECRET_ACCESS_KEY` are
-set. CI uses [RustFS](https://rustfs.com).
+set. CI uses [RustFS](https://rustfs.com). The audit store's tests run against
+[PGlite](https://pglite.dev), and also against a Postgres server when
+`POSTGRES_TEST_URL` is set, as in CI.
 
 Registry source is in `apps/docs/registry`, listed in
 `apps/docs/registry.json`. Components are written once, Radix-style, with an
-`IconPlaceholder` for each icon. The shadcn CLI adapts them to Base UI and to
+`IconPlaceholder` for each icon. They may use another registry's items, such
+as [Dice UI](https://diceui.com)'s, when those are published for both Radix
+and Base UI, follow the project's icon library, and need no app-wide setup. The shadcn CLI adapts them to Base UI and to
 the project's icon library when it installs them. A file that needs different
 code on Base UI gets a copy at the same path under `apps/docs/registry/base/`.
 

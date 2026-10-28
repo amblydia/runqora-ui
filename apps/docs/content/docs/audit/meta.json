@@ -1,0 +1,4 @@
+{
+  "pages": ["audit-log-viewer", "server", "audit-event-details"],
+  "title": "Audit log"
+}

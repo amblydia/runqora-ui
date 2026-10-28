@@ -15,7 +15,9 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
+      "@/components/audit/*": ["./registry/audit/*"],
       "@/components/storage/*": ["./registry/storage/*"],
+      "@/lib/audit/*": ["./registry/lib/audit/*"],
       "@/lib/storage/*": ["./registry/lib/storage/*"],
       "@/registry/*": ["./registry/*"],
       "@/*": ["./src/*"]
