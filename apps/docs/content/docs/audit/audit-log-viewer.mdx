@@ -1,0 +1,155 @@
+---
+title: Audit log viewer
+description: Show who did what in your app, with filters and a detail view for each event.
+---
+
+<ComponentPreview>
+  <AuditLogViewerDemo />
+</ComponentPreview>
+
+The preview runs against a made-up log kept in your browser.
+
+The viewer shows your app's audit log, newest first. Filter by actor, action,
+outcome and date, and open an event to see what changed, the request it came
+from and the raw event. The events live in your own database.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/audit-log-viewer @runqora/audit-actions
+```
+
+`audit-log-viewer` is the interface. `audit-actions` adds Next.js server
+actions that read the log and a `recordAuditEvent()` function that writes to
+it, kept in Postgres. Set them up as shown in
+[server setup](/docs/audit/server) before you use the viewer.
+
+Not on Postgres or Next.js? See [use another backend](#use-another-backend).
+
+The viewer uses [Dice UI](https://diceui.com)'s Faceted and Relative Time Card
+components, which the shadcn CLI installs with it.
+
+## Usage
+
+Pass the server actions to the viewer as its `source`, and name your actions:
+
+```tsx title="app/settings/audit-log/page.tsx"
+import { AuditLogViewer } from "@/components/audit/audit-log-viewer";
+import { getAuditEvent, listAuditEvents } from "@/lib/audit/actions";
+
+const actions = [
+  { value: "member.invited", label: "Invited a member" },
+  { value: "member.role_changed", label: "Changed a member's role" },
+  { value: "project.deleted", label: "Deleted a project" },
+];
+
+export default function AuditLogPage() {
+  return (
+    <AuditLogViewer
+      actions={actions}
+      source={{ getEvent: getAuditEvent, list: listAuditEvents }}
+    />
+  );
+}
+```
+
+The action filter offers the actions you list, under their names. Without
+`actions`, the filter is hidden and the table shows action codes as they are.
+
+## Keep the filter in the URL
+
+The viewer keeps its filter in its own state. To make filtered views
+linkable, control it with `filter` and `onFilterChange`:
+
+```tsx
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AuditLogViewer } from "@/components/audit/audit-log-viewer";
+import type { AuditLogFilter, AuditLogSource } from "@/lib/audit/types";
+
+function readFilter(value: string | null): AuditLogFilter {
+  try {
+    return value ? JSON.parse(value) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function AuditLog({ source }: { source: AuditLogSource }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const filter = readFilter(useSearchParams().get("filter"));
+
+  return (
+    <AuditLogViewer
+      filter={filter}
+      onFilterChange={(next) =>
+        router.push(
+          Object.keys(next).length > 0
+            ? `${pathname}?filter=${encodeURIComponent(JSON.stringify(next))}`
+            : pathname
+        )
+      }
+      source={source}
+    />
+  );
+}
+```
+
+The server actions check every filter they receive, so a link can't widen
+what someone may see.
+
+## Use another backend
+
+`source` is an `AuditLogSource`: an object of async functions that return an
+`AuditResult`, either `{ ok: true, data }` or `{ ok: false, error }`. The
+error is shown to people as it is.
+
+- **Another database, with Next.js:** keep `audit-actions` and replace the
+  store in `lib/audit/server.ts` with your own `AuditStore`. Your store gets
+  the scope from your authorization check and must apply it to every query.
+- **Another framework or API:** install only `@runqora/audit-log-viewer`
+  and implement `list` with your own API:
+
+```ts
+import type { AuditLogSource } from "@/lib/audit/types";
+
+export const source: AuditLogSource = {
+  async list({ cursor, filter }) {
+    const response = await fetch("/api/audit-log", {
+      body: JSON.stringify({ cursor, filter }),
+      method: "POST",
+    });
+    return response.ok
+      ? { ok: true, data: await response.json() }
+      : { ok: false, error: "The audit log couldn't be loaded." };
+  },
+};
+```
+
+## Props
+
+<AutoTypeTable path="./registry/audit/audit-log-viewer.tsx" name="AuditLogViewerProps" />
+
+### AuditLogSource
+
+<AutoTypeTable path="./registry/lib/audit/types.ts" name="AuditLogSource" />
+
+### AuditEvent
+
+<AutoTypeTable path="./registry/lib/audit/types.ts" name="AuditEvent" />
+
+## What it includes
+
+- [Audit event details](/docs/audit/audit-event-details), the sheet each
+  event opens in.
+- Filters by actor id or email, action, outcome and date range.
+- Pages of 50 events, with a **Load more** button.
+
+## Limits
+
+- Events are always newest first, as pages follow the time order.
+- The actor filter matches an id or an email exactly, and the target filter
+  an id. There is no full-text search.
+- Dates are picked as whole days in the viewer's time zone.

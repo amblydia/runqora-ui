@@ -1,0 +1,259 @@
+---
+title: Server setup
+description: Keep the audit log in Postgres, record events, and let the viewer read them with Next.js server actions.
+---
+
+`@runqora/audit-actions` adds two files:
+
+- `lib/audit/server.ts` connects the log to your database and has
+  `recordAuditEvent()`, which you call wherever something worth recording
+  happens.
+- `lib/audit/actions.ts` has the server actions the viewer reads the log
+  with, and your authorization check.
+
+The events are kept in a Postgres table by `lib/audit/postgres.ts`, in plain
+SQL. It works with any Postgres library or ORM, and adds no dependencies.
+
+```npm
+npx shadcn@latest add @runqora/audit-actions
+```
+
+## 1. Create the table
+
+Add the table where your app keeps its schema, so your migrations know about
+it.
+
+<Tabs items={["SQL", "Drizzle", "Prisma"]}>
+<Tab value="SQL">
+
+```sql
+create table if not exists audit_events (
+  id uuid primary key default gen_random_uuid(),
+  occurred_at timestamptz(3) not null default now(),
+  tenant_id text,
+  action text not null,
+  outcome text not null default 'success' check (outcome in ('success', 'failure')),
+  actor_type text not null default 'user',
+  actor_id text,
+  actor_name text,
+  actor_email text,
+  target_type text,
+  target_id text,
+  target_name text,
+  ip_address text,
+  user_agent text,
+  changes jsonb not null default '[]',
+  metadata jsonb not null default '{}'
+);
+create index if not exists audit_events_time on audit_events (occurred_at desc, id desc);
+create index if not exists audit_events_tenant_time on audit_events (tenant_id, occurred_at desc, id desc);
+```
+
+`auditTableSql()` from `lib/audit/postgres.ts` returns the same SQL. It's
+three statements: some libraries, such as Prisma's `$executeRawUnsafe`, run
+one at a time.
+
+</Tab>
+<Tab value="Drizzle">
+
+```ts title="db/schema.ts"
+import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+export const auditEvents = pgTable(
+  "audit_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    occurredAt: timestamp("occurred_at", { precision: 3, withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    tenantId: text("tenant_id"),
+    action: text("action").notNull(),
+    outcome: text("outcome").notNull().default("success"),
+    actorType: text("actor_type").notNull().default("user"),
+    actorId: text("actor_id"),
+    actorName: text("actor_name"),
+    actorEmail: text("actor_email"),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    targetName: text("target_name"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    changes: jsonb("changes").notNull().default([]),
+    metadata: jsonb("metadata").notNull().default({}),
+  },
+  (table) => [
+    index("audit_events_time").on(table.occurredAt.desc(), table.id.desc()),
+    index("audit_events_tenant_time").on(
+      table.tenantId,
+      table.occurredAt.desc(),
+      table.id.desc()
+    ),
+  ]
+);
+```
+
+</Tab>
+<Tab value="Prisma">
+
+```prisma title="prisma/schema.prisma"
+model AuditEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  tenantId   String?  @map("tenant_id")
+  action     String
+  outcome    String   @default("success")
+  actorType  String   @default("user") @map("actor_type")
+  actorId    String?  @map("actor_id")
+  actorName  String?  @map("actor_name")
+  actorEmail String?  @map("actor_email")
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  targetName String?  @map("target_name")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  changes    Json     @default("[]")
+  metadata   Json     @default("{}")
+
+  @@index([occurredAt(sort: Desc), id(sort: Desc)], map: "audit_events_time")
+  @@index([tenantId, occurredAt(sort: Desc), id(sort: Desc)], map: "audit_events_tenant_time")
+  @@map("audit_events")
+}
+```
+
+</Tab>
+</Tabs>
+
+Keep `occurred_at` to the millisecond, as above: the viewer's pages follow
+the time order, and JavaScript dates have no finer precision.
+
+## 2. Connect your database
+
+The store runs its queries through one function, `query` in
+`lib/audit/server.ts`. It refuses every query until you connect it to the
+library you already use:
+
+```ts title="lib/audit/server.ts"
+import { pool } from "@/lib/db"; // A pg Pool.
+
+function query(text: string, params: unknown[]) {
+  return pool.query(text, params).then((result) => result.rows);
+}
+```
+
+With other libraries, the body is:
+
+| Library | Body of `query` |
+| --- | --- |
+| [pg](https://node-postgres.com) | `pool.query(text, params).then((result) => result.rows)` |
+| [postgres.js](https://github.com/porsager/postgres) | `sql.unsafe(text, params)` |
+| [Neon serverless](https://neon.com/docs/serverless/serverless-driver) | `sql.query(text, params)` |
+| [Prisma](https://www.prisma.io) | `prisma.$queryRawUnsafe(text, ...params)` |
+| [Drizzle](https://orm.drizzle.team) | The line for the library under it, through `db.$client` |
+| Bun | `sql.unsafe(text, params)`, with `Bun.SQL` |
+
+Every value goes in as a parameter, never into the SQL text.
+
+## 3. Add your authorization check
+
+Every server action is a public endpoint that anyone can call. The actions
+refuse every request until you write `authorize()` in `lib/audit/actions.ts`.
+It also returns which events the request may see, and the store applies that
+scope to every query, whatever the browser asks for.
+
+For example, to let the owners and admins of an organization see its log
+with [Better Auth](https://better-auth.com) and its organization plugin:
+
+```ts title="lib/audit/actions.ts"
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+
+async function authorize(): Promise<AuditScope> {
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
+  const tenantId = session?.session.activeOrganizationId;
+  const member = tenantId
+    ? await auth.api
+        .getActiveMember({ headers: requestHeaders })
+        .catch(() => null)
+    : null;
+  // A member can have several roles, such as "admin,member".
+  const roles = member?.role.split(",") ?? [];
+  if (!(tenantId && roles.some((role) => role === "owner" || role === "admin"))) {
+    throw new AuditActionError("You are not allowed to see the audit log.");
+  }
+  return { tenantId };
+}
+```
+
+| Scope | Shows |
+| --- | --- |
+| `{ tenantId }` | The events of one organization, workspace or account. |
+| `{ actorId }` | One person's own activity. |
+| `{ tenantId, actorId }` | One person's activity in one organization. |
+| `{ all: true }` | Every event. Only for people who may see everything, such as the admins of a single-tenant app. |
+
+## 4. Record events
+
+Call `recordAuditEvent()` on the server once something has happened, or
+failed, such as in the server action that changes a member's role:
+
+```ts
+import { recordAuditEvent } from "@/lib/audit/server";
+
+await recordAuditEvent({
+  action: "member.role_changed",
+  actor: { id: user.id, name: user.name, email: user.email },
+  target: { type: "member", id: member.id, name: member.user.name },
+  changes: [{ field: "role", before: "member", after: "admin" }],
+  tenantId: organization.id,
+});
+```
+
+The address and browser of the current request are filled in unless the
+event has its own. Clients can send address headers themselves, so set
+`clientAddress()` in `lib/audit/server.ts` to read the one that what sits in
+front of your app sets:
+
+| In front of your app | Header |
+| --- | --- |
+| Cloudflare | `cf-connecting-ip` |
+| Vercel | `x-real-ip` |
+| Your own nginx or Traefik | The header you set there from the address it saw |
+
+By default it reads the last `x-forwarded-for` entry, which the nearest proxy
+added. Only valid IP addresses are recorded.
+
+Don't export `recordAuditEvent()` from a file with `"use server"`: it would
+let anyone write to your audit log.
+
+## Settings
+
+The top of `lib/audit/actions.ts` has the settings you may want to change:
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `PAGE_SIZE` | 50 | Events per page. |
+| `MAX_ACTIONS` | 50 | Most actions one filter can pick. |
+
+To use another table name, such as `audit.events`, pass `table` to
+`createPostgresAuditStore()` in `lib/audit/server.ts`.
+
+## What the actions check
+
+- Every filter field is checked and normalized, and unknown fields are
+  dropped. Dates must be valid, and the start before the end.
+- The scope from `authorize()` is applied to every query. A scope with an
+  empty id is refused rather than ignored.
+- Page cursors are checked before they reach the database.
+- An event outside the request's scope reads as missing, so its existence
+  doesn't leak.
+- Errors are turned into messages that are safe to show. Anything
+  unexpected is logged on the server and shown as a generic error.
+
+## Source
+
+<include lang="ts">../../../registry/lib/audit/actions.ts</include>
+
+<include lang="ts">../../../registry/lib/audit/server.ts</include>
+
+<include lang="ts">../../../registry/lib/audit/postgres.ts</include>
