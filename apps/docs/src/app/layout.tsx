@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   description:
-    "A shadcn registry of components for the screens most SaaS apps need, starting with a file browser for S3 and R2 buckets.",
+    "A shadcn registry of the screens most SaaS apps need, wired to the backend you already have: a file browser for S3 and R2, an audit log viewer, webhook screens and custom domains.",
   metadataBase: new URL("https://runqora.dev"),
   title: { default: "Runqora UI", template: "%s | Runqora UI" },
 };
