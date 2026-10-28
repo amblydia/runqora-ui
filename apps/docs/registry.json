@@ -236,6 +236,116 @@
         }
       ],
       "categories": ["audit"]
+    },
+    {
+      "name": "webhook-endpoints",
+      "type": "registry:component",
+      "title": "Webhook endpoints",
+      "description": "Manage the URLs your app sends webhooks to: add, edit, turn off and delete endpoints, pick their events, send a test event, and see or rotate signing secrets.",
+      "registryDependencies": [
+        "alert-dialog",
+        "badge",
+        "button",
+        "checkbox",
+        "dialog",
+        "dropdown-menu",
+        "empty",
+        "field",
+        "input",
+        "native-select",
+        "skeleton",
+        "switch",
+        "table",
+        "@runqora/webhooks"
+      ],
+      "files": [
+        {
+          "path": "registry/webhooks/webhook-endpoints.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/webhook-endpoints.tsx"
+        },
+        {
+          "path": "registry/webhooks/webhook-endpoint-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/webhook-endpoint-dialog.tsx"
+        },
+        {
+          "path": "registry/webhooks/webhook-secret-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/webhook-secret-dialog.tsx"
+        },
+        {
+          "path": "registry/webhooks/send-test-event-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/send-test-event-dialog.tsx"
+        },
+        {
+          "path": "registry/webhooks/delete-webhook-endpoint-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/delete-webhook-endpoint-dialog.tsx"
+        }
+      ],
+      "categories": ["webhooks"]
+    },
+    {
+      "name": "webhook-delivery-log",
+      "type": "registry:component",
+      "title": "Webhook delivery log",
+      "description": "The webhooks your app has sent, newest first: filter by endpoint, event and status, and open a delivery to see its payload and responses.",
+      "registryDependencies": [
+        "button",
+        "empty",
+        "native-select",
+        "skeleton",
+        "table",
+        "@diceui/faceted",
+        "@diceui/relative-time-card",
+        "@runqora/webhook-delivery-details",
+        "@runqora/webhooks"
+      ],
+      "files": [
+        {
+          "path": "registry/webhooks/webhook-delivery-log.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/webhook-delivery-log.tsx"
+        }
+      ],
+      "categories": ["webhooks"]
+    },
+    {
+      "name": "webhook-delivery-details",
+      "type": "registry:component",
+      "title": "Webhook delivery details",
+      "description": "A side sheet with one webhook delivery: the payload sent, what the endpoint answered to each attempt, and a button to resend it.",
+      "registryDependencies": [
+        "badge",
+        "button",
+        "sheet",
+        "skeleton",
+        "@runqora/webhooks"
+      ],
+      "files": [
+        {
+          "path": "registry/webhooks/webhook-delivery-details.tsx",
+          "type": "registry:component",
+          "target": "@components/webhooks/webhook-delivery-details.tsx"
+        }
+      ],
+      "categories": ["webhooks"]
+    },
+    {
+      "name": "webhooks",
+      "type": "registry:lib",
+      "title": "Webhook types",
+      "description": "The types the webhook components share, and the WebhookSource interface you write for your backend.",
+      "files": [
+        {
+          "path": "registry/lib/webhooks/types.ts",
+          "type": "registry:lib",
+          "target": "@lib/webhooks/types.ts"
+        }
+      ],
+      "categories": ["webhooks"]
     }
   ]
 }

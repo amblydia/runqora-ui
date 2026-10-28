@@ -1,0 +1,74 @@
+---
+title: Webhook delivery details
+description: A side sheet with one webhook delivery's payload, each attempt's response, and a Resend button.
+---
+
+<ComponentPreview>
+  <WebhookDeliveryDetailsDemo />
+</ComponentPreview>
+
+The sheet shows one delivery: its status, the payload that was sent, and
+every attempt, newest first, with the status code, timing, response body and
+headers. With `resendDelivery`, people can send it again.
+
+The [delivery log](/docs/webhooks/webhook-delivery-log) opens it for you. Use
+it on its own to open a delivery from somewhere else, such as a link in an
+email about failing webhooks.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/webhook-delivery-details
+```
+
+## Usage
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { WebhookDeliveryDetails } from "@/components/webhooks/webhook-delivery-details";
+import { webhookSource } from "@/lib/webhooks/source";
+
+export function DeliveryLink({ deliveryId }: { deliveryId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)} type="button">
+        See what happened
+      </button>
+      <WebhookDeliveryDetails
+        deliveryId={deliveryId}
+        onOpenChange={setOpen}
+        open={open}
+        source={webhookSource}
+      />
+    </>
+  );
+}
+```
+
+## Responses are shown as text
+
+The receiving endpoint decides what its response contains, so the sheet
+never treats it as HTML or as a link, whatever its `content-type` says. JSON
+is indented. Characters that would be invisible or change how the text
+around them reads, such as control characters, zero-width characters, tag
+characters and bidirectional overrides, are written out as `\u` escapes.
+Very long bodies are cut at 100,000 characters, and an attempt's response
+is only rendered once it's opened.
+
+The other webhook components escape URLs and descriptions the same way,
+with `showHidden()` from `lib/webhooks/types.ts`.
+
+## Props
+
+<AutoTypeTable path="./registry/webhooks/webhook-delivery-details.tsx" name="WebhookDeliveryDetailsProps" />
+
+### WebhookDeliveryRecord
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookDeliveryRecord" />
+
+### WebhookAttempt
+
+<AutoTypeTable path="./registry/lib/webhooks/types.ts" name="WebhookAttempt" />

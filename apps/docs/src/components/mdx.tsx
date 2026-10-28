@@ -14,6 +14,9 @@ import { FileBrowserDemo } from "@/components/demos/file-browser-demo";
 import { ObjectActionsDemo } from "@/components/demos/object-actions-demo";
 import { ObjectDetailsDemo } from "@/components/demos/object-details-demo";
 import { UploadButtonDemo } from "@/components/demos/upload-button-demo";
+import { WebhookDeliveryDetailsDemo } from "@/components/demos/webhook-delivery-details-demo";
+import { WebhookDeliveryLogDemo } from "@/components/demos/webhook-delivery-log-demo";
+import { WebhookEndpointsDemo } from "@/components/demos/webhook-endpoints-demo";
 
 const generator = createGenerator({
   cache: createFileSystemGeneratorCache(".next/fumadocs-typescript"),
@@ -39,6 +42,9 @@ export function getMDXComponents(components?: MDXComponents) {
     Tab,
     Tabs,
     UploadButtonDemo,
+    WebhookDeliveryDetailsDemo,
+    WebhookDeliveryLogDemo,
+    WebhookEndpointsDemo,
     ...components,
   } satisfies MDXComponents;
 }
