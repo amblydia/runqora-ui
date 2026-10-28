@@ -9,9 +9,10 @@ export default function HomePage() {
       </h1>
       <p className="text-muted-foreground text-lg">
         Runqora UI is a shadcn registry: a file browser for the S3 or R2 bucket
-        you already have, an audit log viewer for your own database, and webhook
-        screens for whatever sends your webhooks. Install with the shadcn CLI
-        and own the code.
+        you already have, an audit log viewer for your own database, webhook
+        screens for whatever sends your webhooks, and custom domains your
+        customers connect themselves. Install with the shadcn CLI and own the
+        code.
       </p>
       <div className="flex flex-wrap gap-3">
         <Button asChild>

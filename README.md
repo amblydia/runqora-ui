@@ -41,6 +41,10 @@ next starts.
    resend. You bring the backend that sends them, your own code or a service
    such as [Svix](https://www.svix.com): the components call a small
    interface you write for it.
+4. **Custom domains.** Let your customers connect their own domains: add
+   one, see the DNS records to create, and watch it become active. Your
+   backend serves the domains, such as Cloudflare for SaaS, Vercel or your
+   own proxy, through a small interface you write for it.
 
 Not planned, because good registries already cover them:
 

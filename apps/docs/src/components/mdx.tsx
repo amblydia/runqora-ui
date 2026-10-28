@@ -10,6 +10,8 @@ import type { ComponentProps } from "react";
 import { ComponentPreview } from "@/components/component-preview";
 import { AuditEventDetailsDemo } from "@/components/demos/audit-event-details-demo";
 import { AuditLogViewerDemo } from "@/components/demos/audit-log-viewer-demo";
+import { CustomDomainsDemo } from "@/components/demos/custom-domains-demo";
+import { DomainSetupDemo } from "@/components/demos/domain-setup-demo";
 import { FileBrowserDemo } from "@/components/demos/file-browser-demo";
 import { ObjectActionsDemo } from "@/components/demos/object-actions-demo";
 import { ObjectDetailsDemo } from "@/components/demos/object-details-demo";
@@ -36,6 +38,8 @@ export function getMDXComponents(components?: MDXComponents) {
     AuditLogViewerDemo,
     AutoTypeTable: TypeTable,
     ComponentPreview,
+    CustomDomainsDemo,
+    DomainSetupDemo,
     FileBrowserDemo,
     ObjectActionsDemo,
     ObjectDetailsDemo,

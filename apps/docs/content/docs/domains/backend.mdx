@@ -1,0 +1,137 @@
+---
+title: Connect a backend
+description: Write the DomainSource the custom domain components call, for Cloudflare for SaaS, Vercel or your own proxy.
+---
+
+The custom domain components don't touch DNS, certificates or your
+database. Every call goes through a `DomainSource`, an object of async
+functions that you write for whatever serves your customers' domains.
+
+```npm
+npx shadcn@latest add @runqora/domains
+```
+
+That adds `lib/domains/types.ts` with `DomainSource`, the types it uses and
+`readHostname()`. The components install it too.
+
+## The contract
+
+Each function returns a `DomainResult`: `{ ok: true, data }` or
+`{ ok: false, error }`. The error is shown to people as it is, so write it
+for them. Errors are values rather than exceptions because Next.js hides the
+message of an error thrown by a server action in production.
+
+| Call | Used for | Needed |
+| --- | --- | --- |
+| `listDomains` | The list | Yes |
+| `addDomain` | Add a domain | No |
+| `checkDomain` | Check now, and checking on its own | No |
+| `setPrimaryDomain` | Make primary | No |
+| `removeDomain` | Remove | No |
+
+Leave a call out and the components hide what depends on it. Keep the
+source the same object between renders, such as a module-level constant:
+the components load data when its functions change.
+
+`checkDomain` gets `{ manual: true }` when someone chose **Check now**, and
+`{ manual: false }` for the checks the components make on their own, every
+few seconds to minutes per pending domain.
+
+Write the calls as Next.js server actions that start by checking who is
+asking, as the [webhooks backend](/docs/webhooks/backend#with-nextjs-server-actions)
+shows, or call your API with `fetch`.
+
+## Security checklist
+
+- **Prove ownership with your own token before routing a domain to an
+  account.** Your provider's checks aren't enough on their own: Cloudflare,
+  for example, also activates a hostname whose CNAME already points at you.
+  So if a former customer leaves their CNAME in place, someone else could add
+  that domain and have your app show their account on it. For each claim,
+  give a TXT record with a token your backend made, check it yourself, and
+  only then create the hostname with your provider or route to the account.
+- **Route only verified domains.** Your app should look up the account for
+  a request's hostname among verified domains only, never pending ones.
+- **Let the verified claim win.** Don't refuse a domain because another
+  account added it first: that lets people hold on to domains they don't
+  own. Let several accounts claim it, give it to the one that verifies, and
+  expire claims that don't.
+- **Check who is asking in every call**, and keep which domains belong to
+  which account in your own database. Answer "doesn't exist" for ids outside
+  the account.
+- **Check hostnames on the server.** Use `readHostname()` from
+  `lib/domains/types.ts` and store its ASCII result. Then refuse your own
+  domain and its subdomains, and names that are only a public suffix, such
+  as `co.uk` or `github.io`, using the
+  [Public Suffix List](https://publicsuffix.org). Require a suffix from its
+  ICANN section, as its default rule accepts any unknown ending.
+- **Remove domains with the account**, so none is left pointing at you.
+- **Limit and cache checks.** Every pending domain shown checks on its own,
+  and each check can call your provider's API with your one token. Limit
+  additions and checks per account, cache what the provider returns for each
+  domain for about 30 seconds, and keep slower refreshes to manual checks.
+  Cloudflare, for example, allows 1,200 API requests per 5 minutes for a
+  whole account.
+
+## With Cloudflare for SaaS
+
+Cloudflare calls a domain a custom hostname. `zoneId` is your SaaS zone,
+and your database maps each account to its hostnames.
+
+| Call | Cloudflare API |
+| --- | --- |
+| `listDomains` | [Custom hostname details](https://developers.cloudflare.com/api/resources/custom_hostnames/methods/get/) for each of the account's hostnames. |
+| `addDomain` | Store the claim with your own token first, and return your TXT record. Once your backend has seen the token, [create the custom hostname](https://developers.cloudflare.com/api/resources/custom_hostnames/methods/create/) with `ssl: { method: "txt", type: "dv" }`. The certificate records can be missing from its answer, so read the hostname again shortly after. |
+| `checkDomain` | Custom hostname details. For manual checks only, [edit the custom hostname](https://developers.cloudflare.com/api/resources/custom_hostnames/methods/edit/) with the same `ssl` method and type first, so Cloudflare checks again sooner. |
+| `removeDomain` | [Delete custom hostname](https://developers.cloudflare.com/api/resources/custom_hostnames/methods/delete/), which also deletes its certificate. |
+| `setPrimaryDomain` | Your own database. |
+
+From a custom hostname:
+
+- `status` is `active` for `active` and `active_redeploying`, `failed` for
+  `moved`, `blocked` or `deleted`, and `pending` otherwise.
+  `verification_errors[0]` makes a good `statusMessage`.
+- `certificate` comes from `ssl.status`: `active` for `active`, `failed`
+  when it timed out or `expired`, and `pending` otherwise.
+- The records are your own TXT token with purpose `ownership`; a CNAME from
+  the hostname to your CNAME target with purpose `routing`; and each of
+  `ssl.validation_records` as a TXT record (`txt_name`, `txt_value`) with
+  purpose `certificate`.
+
+## With Vercel
+
+Vercel adds each domain to your project. `projectId` is that project, and
+your database maps each account to its domains.
+
+| Call | Vercel SDK |
+| --- | --- |
+| `listDomains` | `vercel.projects.getProjectDomain({ idOrName, domain })` and `vercel.domains.getDomainConfig({ domain })` for each of the account's domains. |
+| `addDomain` | Store the claim with your own token first, and return your TXT record. Once your backend has seen the token, `vercel.projects.addProjectDomain({ idOrName, requestBody: { name } })`, then read it as for `listDomains`. |
+| `checkDomain` | `vercel.projects.verifyProjectDomain({ idOrName, domain })`, then read it as for `listDomains`. |
+| `removeDomain` | `vercel.projects.removeProjectDomain({ idOrName, domain })` |
+| `setPrimaryDomain` | Your own database. |
+
+From a project domain and its configuration:
+
+- Each entry of the project domain's `verification` is a record with
+  purpose `ownership`, from its `type`, `domain` (the record's name) and
+  `value`. While there are any, the domain is `pending`.
+- When the configuration is `misconfigured`, add a `routing` record. For a
+  root domain, where the domain equals the project domain's `apexName`, it's
+  an `A` record with the value of rank 1 in `recommendedIPv4`. For a
+  subdomain, it's a `CNAME` record with the value of rank 1 in
+  `recommendedCNAME`. The domain is `pending`.
+- Otherwise the domain is `active`.
+
+## Your own proxy
+
+With a proxy that issues certificates on demand, such as Caddy, the records
+are yours to choose: usually a CNAME or A record to your proxy, and your TXT
+token. Let the proxy request certificates only for verified domains, such as
+through Caddy's `ask` endpoint. Otherwise any name pointed at it could start
+a certificate request, and failed ones count against your certificate
+authority's rate limits.
+
+## DomainSource
+
+<AutoTypeTable path="./registry/lib/domains/types.ts" name="DomainSource" />

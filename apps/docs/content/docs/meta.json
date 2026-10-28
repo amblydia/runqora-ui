@@ -1,1 +1,3 @@
-{ "pages": ["index", "installation", "storage", "audit", "webhooks"] }
+{
+  "pages": ["index", "installation", "storage", "audit", "webhooks", "domains"]
+}

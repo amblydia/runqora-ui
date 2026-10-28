@@ -1,0 +1,89 @@
+---
+title: Custom domains
+description: Let your customers connect their own domains, follow the DNS setup until each is active, and manage them.
+---
+
+<ComponentPreview>
+  <CustomDomainsDemo />
+</ComponentPreview>
+
+The preview runs against made-up domains kept in your browser. Each check
+finds one more DNS record, so a domain you add becomes active after a few.
+
+The custom domains list lets your customers show their account at an
+address they own, such as `shop.example.com`. They add a domain, see the DNS
+records to create, and the list checks until the domain is active. They can
+make one domain primary and remove the ones they no longer use.
+
+The list doesn't touch DNS or certificates. Your backend does, whether
+that's [Cloudflare for SaaS](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/),
+Vercel or your own proxy.
+
+## Installation
+
+```npm
+npx shadcn@latest add @runqora/custom-domains
+```
+
+It installs [domain setup](/docs/domains/domain-setup), the records panel
+each domain opens. Then write a `DomainSource` for your backend, as shown in
+[connect a backend](/docs/domains/backend).
+
+## Usage
+
+```tsx title="app/settings/domains/page.tsx"
+import { CustomDomains } from "@/components/domains/custom-domains";
+import { domainSource } from "@/lib/domains/source";
+
+export default function DomainsPage() {
+  return <CustomDomains source={domainSource} />;
+}
+```
+
+## Only what your backend supports
+
+Each action shows only when your source has the call behind it:
+
+| Action | Call |
+| --- | --- |
+| Add a domain | `addDomain` |
+| Check now, and checking on its own | `checkDomain` |
+| Make primary | `setPrimaryDomain` |
+| Remove | `removeDomain` |
+
+So a source with only `listDomains` gives a read-only list.
+
+## How domains are checked
+
+A pending domain's setup is open, and checked again on its own until the
+domain is active and its certificate issued: after about 10 seconds, then
+waiting longer each time, up to 5 minutes between checks.
+Checks pause while the tab is hidden and stop after an hour, and **Check
+now** starts them over. Pass `autoCheck={false}` to check only when asked.
+
+When a check finds the domain active, the list says so and its setup stays
+open, so the change can be read.
+
+## What people can type
+
+The domain field takes what people paste: `https://Shop.Example.com/path`
+becomes `shop.example.com`, and international names are encoded the way
+browsers send them. It refuses IP addresses, ports and names that can't have
+DNS records. That check is only there for a quick message: your backend must
+check the hostname again, see the
+[security checklist](/docs/domains/backend#security-checklist).
+
+## Props
+
+<AutoTypeTable path="./registry/domains/custom-domains.tsx" name="CustomDomainsProps" />
+
+### CustomDomain
+
+<AutoTypeTable path="./registry/lib/domains/types.ts" name="CustomDomain" />
+
+## Limits
+
+- Domains are listed all at once, without pages, as an account rarely has
+  more than a few.
+- Only active domains can be made primary.
+- There is no wildcard domain support, such as `*.example.com`.

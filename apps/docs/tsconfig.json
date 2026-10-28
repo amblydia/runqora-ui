@@ -16,9 +16,11 @@
     "incremental": true,
     "paths": {
       "@/components/audit/*": ["./registry/audit/*"],
+      "@/components/domains/*": ["./registry/domains/*"],
       "@/components/storage/*": ["./registry/storage/*"],
       "@/components/webhooks/*": ["./registry/webhooks/*"],
       "@/lib/audit/*": ["./registry/lib/audit/*"],
+      "@/lib/domains/*": ["./registry/lib/domains/*"],
       "@/lib/storage/*": ["./registry/lib/storage/*"],
       "@/lib/webhooks/*": ["./registry/lib/webhooks/*"],
       "@/registry/*": ["./registry/*"],
