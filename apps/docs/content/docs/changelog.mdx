@@ -1,0 +1,101 @@
+---
+title: Changelog
+description: New components, fixes and changes to the registry and this site.
+---
+
+Runqora UI has no version numbers. The shadcn CLI always installs a
+component's latest code, and from then on the copy in your project is yours.
+To pick up a fix in a component you've already added, commit your work, add
+it again with `--overwrite`, and review the diff before keeping it:
+
+```bash
+npx shadcn@latest add @runqora/audit-log-viewer --overwrite
+```
+
+## 30 October 2026
+
+- A new Runqora logo, favicon and social preview images.
+- This changelog.
+
+## 29 October 2026
+
+- The home page shows each component set running against sample data, with
+  the install steps.
+- A new [recommended libraries](/libraries) page lists other shadcn
+  registries for the screens Runqora doesn't build, such as sign-in, billing
+  and uploads.
+
+## 28 October 2026
+
+### Custom domains
+
+Screens for your customers to connect their own domains, for whatever
+serves them: Cloudflare for SaaS, Vercel or your own proxy.
+
+- `custom-domains`: add a domain, follow its setup until it's active, make
+  one primary and remove it.
+- `domain-setup`: the DNS records to create, with copy buttons and a status
+  for each, checked again until the domain and its certificate are active.
+- `domains`: the shared types, the `DomainSource` interface you write for
+  your backend, and `readHostname()`.
+
+[Connect a backend](/docs/domains/backend) has a security checklist and maps
+each call to the Cloudflare for SaaS API and the Vercel SDK.
+
+## 27 October 2026
+
+### Webhooks
+
+Screens for your customers to manage the endpoints your app sends webhooks
+to, for whatever sends them: your own code or a service such as Svix.
+
+- `webhook-endpoints`: add, edit, turn off and delete endpoints, send test
+  events, and reveal or rotate signing secrets.
+- `webhook-delivery-log`: deliveries with filters and paging.
+- `webhook-delivery-details`: a delivery's payload and each attempt's
+  response, with Resend.
+- `webhooks`: the shared types and the `WebhookSource` interface you write
+  for your backend.
+
+[Connect a backend](/docs/webhooks/backend) has a security checklist and maps
+each call to the Svix SDK.
+
+### Audit log viewer
+
+See who did what in your app, with events kept in your own Postgres
+database.
+
+- `audit-log-viewer`: a table of events with filters and paging.
+- `audit-event-details`: one event and what it changed, in a side sheet.
+- `audit-log`: the shared types and the `AuditLogSource` interface.
+- `audit-postgres`: a plain-SQL store that works with any Postgres library
+  or ORM.
+- `audit-actions`: Next.js server actions that limit every query to what the
+  signed-in person may see.
+
+See [Server setup](/docs/audit/server).
+
+### Fixed
+
+- `audit-log-viewer`: after a filter changed, "Load more" could add a page of
+  events from the previous filter.
+
+## 26 October 2026
+
+### File browser
+
+The first release of the registry, with Radix and Base UI builds of every
+component. Browse and manage the Amazon S3 or Cloudflare R2 bucket you
+already have, with files going straight between the browser and the bucket.
+
+- `file-browser`: folders, previews, upload, download, copy link, rename or
+  move, and delete.
+- `object-actions`: the menu for one file.
+- `object-details`: a file's details in a side sheet.
+- `upload-button`: uploads with progress.
+- `storage`: the shared types and the `StorageSource` interface.
+- `s3`: a small S3 client that signs requests with `aws4fetch`.
+- `storage-actions`: Next.js server actions that refuse every request until
+  you add an authorization check.
+
+See [Server setup](/docs/storage/server).

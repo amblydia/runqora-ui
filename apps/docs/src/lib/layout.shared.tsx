@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import { Logo } from "@/components/logo";
 import { appName, gitConfig } from "./shared";
 
 export function baseOptions(): BaseLayoutProps {
@@ -9,8 +10,12 @@ export function baseOptions(): BaseLayoutProps {
       { text: "Libraries", url: "/libraries" },
     ],
     nav: {
-      // JSX supported
-      title: appName,
+      title: (
+        <>
+          <Logo className="size-5" />
+          {appName}
+        </>
+      ),
     },
   };
 }

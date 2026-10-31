@@ -1,5 +1,6 @@
 import { generateOGImage } from "fumadocs-ui/og";
 import { notFound } from "next/navigation";
+import { Logo } from "@/components/logo";
 import { appName, getPageImageUrl } from "@/lib/shared";
 import { source } from "@/lib/source";
 
@@ -17,6 +18,10 @@ export async function GET(
 
   return generateOGImage({
     description: page.data.description,
+    icon: <Logo height={56} width={54} />,
+    // Monochrome, to match the logo, in place of Fumadocs' default pink.
+    primaryColor: "rgba(255, 255, 255, 0.2)",
+    primaryTextColor: "rgb(255, 255, 255)",
     site: appName,
     title: page.data.title,
   });

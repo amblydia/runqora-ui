@@ -4,7 +4,7 @@ A [shadcn registry](https://ui.shadcn.com/docs/registry) of components for the
 screens most SaaS apps need and shadcn/ui doesn't ship. Install them with the
 shadcn CLI and own the code. Nothing runs on Runqora's side.
 
-Docs: [runqora.dev](https://runqora.dev)
+Docs: [runqora.dev](https://runqora.dev) · [Changelog](https://runqora.dev/docs/changelog)
 
 ```bash
 npx shadcn@latest registry add @runqora=https://runqora.dev/r/{style}/{name}.json
